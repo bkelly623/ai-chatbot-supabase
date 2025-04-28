@@ -155,7 +155,7 @@ export async function POST(request: Request) {
           id: generateUUID(),
           chat_id: id,
           role: userMessage?.role??'user',
-          content: userMessage?.content??",
+          content: userMessage?.content??'',
           created_at: new Date().toISOString(),
         },
       ],
