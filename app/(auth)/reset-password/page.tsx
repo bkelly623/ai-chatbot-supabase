@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -9,71 +9,81 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
-export default function ResetPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [password, setPassword] = useState('');
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const type = searchParams.get('type');
-    if (type !== 'recovery') {
-      toast.error('Invalid password reset link');
-      router.push('/login');
+    const tokenFromUrl = searchParams.get('token');
+    if (!tokenFromUrl) {
+      toast.error('Missing token from URL.');
     }
-  }, [searchParams, router]);
+    setToken(tokenFromUrl);
+  }, [searchParams]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsLoading(true);
 
     try {
+      if (!token) {
+        toast.error('Reset token not found.');
+        return;
+      }
+
+      const supabase = createClient();
+
       const { data, error } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (error) {
-        throw error;
+        toast.error(error.message);
+        return;
       }
 
-      toast.success('Password updated successfully.');
+      toast.success('Password updated! Please log in.');
       router.push('/login');
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong.');
+    } catch (err: any) {
+      toast.error(err.message || 'Unexpected error.');
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center py-10">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Reset Password</h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Enter your new password below.
-          </p>
+    <div className="flex h-screen items-center justify-center">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center">Reset Your Password</h1>
+
+        <div>
+          <Label htmlFor="password">New Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Updating...' : 'Update Password'}
-          </Button>
-        </form>
-      </div>
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Updating...' : 'Update Password'}
+        </Button>
+      </form>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="text-center mt-10">Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
