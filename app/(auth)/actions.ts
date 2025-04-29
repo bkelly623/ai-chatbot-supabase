@@ -56,20 +56,19 @@ export interface RegisterActionState {
     | 'invalid_data';
 }
 
-//  *** IMPORTANT CHANGE HERE  ***
 export const signUp = async (
   email: string,
   password: string,
   firstName: string,
   lastName: string
-): Promise<void> => {  // Changed return type to Promise<void>
+): Promise<void> => {
   try {
     const supabase = await createClient();
 
     // Check if user exists
     const existingUser = await getUser(email);
     if (existingUser) {
-      throw new Error('User already exists'); // Changed to throw an error
+      throw new Error('User already exists');
     }
 
     // Sign up new user
@@ -86,11 +85,10 @@ export const signUp = async (
     });
 
     if (error) {
-      throw new Error(error.message); // Changed to throw an error
+      throw new Error(error.message);
     }
-
   } catch (error: any) {
-    throw new Error(error.message); // Re-throw the error
+    throw new Error(error.message);
   }
 };
 
@@ -109,15 +107,14 @@ export const register = async (
     // We no longer call supabase.auth.signUp directly here
     await signUp(validatedData.email, validatedData.password, validatedData.firstName, validatedData.lastName);
 
-
     return { status: 'success' };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
-    } else if (error.message === 'User already exists') {
+    } else if (error instanceof Error && error.message === 'User already exists') {
       return { status: 'user_exists' };
+    } else {
+      return { status: 'failed' };
     }
-
-    return { status: 'failed' };
   }
 };
