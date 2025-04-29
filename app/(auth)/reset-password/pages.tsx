@@ -27,7 +27,6 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [token, setToken] = useState('');
-
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -52,16 +51,21 @@ export default function ResetPasswordPage() {
     try {
       const supabase = createClient();
 
-      const { data, error } = await supabase.auth.updateUser(
-        { password: password },  //  Attributes: password
-        { token: token } as UpdateUserWithTokenOptions   //  Options: token (and others)
-      );
-
-      if (error) {
-        setError(error.message || 'Could not reset password.');
+      if (typeof window !== 'undefined') {
+        const { data, error } = await supabase.auth.updateUser(
+          { password: password },  //  Attributes: password
+          { token: token } as UpdateUserWithTokenOptions   //  Options: token (and others)
+        );
+        if (error) {
+          setError(error.message || 'Could not reset password.');
+        } else {
+          setSuccess(true);
+        }
       } else {
-        setSuccess(true);
+        console.warn("Attempted to update user password outside the browser environment.");
+        setError("Cannot reset password on the server.");
       }
+
     } catch (err) {
       setError('An unexpected error occurred.');
     } finally {
@@ -121,7 +125,8 @@ export default function ResetPasswordPage() {
             />
           </div>
           <Button className="w-full" disabled={isLoading}>
-            {isLoading ? 'Resetting...' : 'Reset Password'}
+            {isLoading ?
+              'Resetting...' : 'Reset Password'}
           </Button>
         </form>
       </div>
