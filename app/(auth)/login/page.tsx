@@ -60,7 +60,15 @@ export default function LoginPage() {
           <Button className="w-full" disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Login'}
           </Button>
+
+          {/* Added Forgot Password Link */}
+          <div className="text-center mt-2">
+            <Link href="/forgot-password" className="text-sm underline text-blue-600">
+              Forgot password?
+            </Link>
+          </div>
         </form>
+
         <div className="text-center text-sm">
           Don&apos;t have an account?{' '}
           <Link className="underline" href="/register">
