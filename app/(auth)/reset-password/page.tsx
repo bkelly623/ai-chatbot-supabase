@@ -23,8 +23,10 @@ export default function ForgotPasswordPage() {
 
       const supabase = createClient();
 
-      // Use the full URL stored in NEXT_PUBLIC_SITE_URL — no additional path
-      const redirectToUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      // Hardcoded redirect URL for testing
+      const redirectToUrl =
+        'https://ai-chatbot-supabase-git-forgot-password-flow-b-kellys-projects.vercel.app/reset-password';
+
       console.log('Redirecting to:', redirectToUrl);
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
