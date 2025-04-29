@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import { createClient } from '@/lib/supabase/client';
 
 export default function ResetPasswordPage() {
@@ -41,22 +42,10 @@ export default function ResetPasswordPage() {
     try {
       const supabase = createClient();
 
-      // Try to sign in with the token (this might set the user's session)
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        access_token: token,
-        refresh_token: '', // Refresh token is not usually needed here
-      });
+      const { data, error } = await supabase.auth.updateUser({ password }, { token });
 
-      if (sessionError) {
-        setError(sessionError.message || 'Invalid reset link.');
-        return;
-      }
-
-      // If session is set (or if the above isn't the correct method, try updateUser directly)
-      const { error: updateError } = await supabase.auth.updateUser({ password });
-
-      if (updateError) {
-        setError(updateError.message || 'Could not reset password.');
+      if (error) {
+        setError(error.message || 'Could not reset password.');
       } else {
         setSuccess(true);
       }
