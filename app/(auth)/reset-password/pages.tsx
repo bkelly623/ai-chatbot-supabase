@@ -69,23 +69,21 @@ export default function ResetPasswordPage() {
         setError('');
 
         try {
-            if (supabaseClient.current) {
-                // Double-check for null before accessing
-                if (supabaseClient.current) {
-                    const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser(
-                        { password: password },
-                        { token: token } as UpdateUserWithTokenOptions
-                    );
-                    if (error) {
-                        setError(error.message || 'Could not reset password.');
-                    } else {
-                        setSuccess(true);
-                    }
-                }
-
-            } else {
+            // Early return if supabaseClient.current is null
+            if (!supabaseClient.current) {
                 console.warn("Supabase client is not initialized.");
                 setError("Could not connect to the server.");
+                return; // Exit the function early
+            }
+
+            const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser(
+                { password: password },
+                { token: token } as UpdateUserWithTokenOptions
+            );
+            if (error) {
+                setError(error.message || 'Could not reset password.');
+            } else {
+                setSuccess(true);
             }
 
 
