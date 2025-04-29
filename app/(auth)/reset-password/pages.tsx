@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { User, UpdateUserAttributes } from '@supabase/supabase-js'; // Import the type
+import { User, UserAttributes } from '@supabase/supabase-js'; //  <---  CHECK THIS IMPORT
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser(
         { password: password },
-        { token: token } as UpdateUserAttributes // Explicitly type the options
+        { token: token } as UserAttributes  //  <---  CHECK THIS TYPE
       );
 
       if (error) {
