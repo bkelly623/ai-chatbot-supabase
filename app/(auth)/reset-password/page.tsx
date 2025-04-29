@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -9,36 +9,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
-function ResetPasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
+export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [password, setPassword] = useState('');
-  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get('token');
-    if (!tokenFromUrl) {
-      toast.error('Missing token from URL.');
-    }
-    setToken(tokenFromUrl);
-  }, [searchParams]);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setIsLoading(true);
 
     try {
-      if (!token) {
-        toast.error('Reset token not found.');
-        return;
-      }
+      const formData = new FormData(event.currentTarget);
+      const email = formData.get('email') as string;
 
       const supabase = createClient();
-
-      const { data, error } = await supabase.auth.updateUser({
-        password: password,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
       });
 
       if (error) {
@@ -46,44 +31,47 @@ function ResetPasswordForm() {
         return;
       }
 
-      toast.success('Password updated! Please log in.');
+      toast.success('Password reset email sent. Check your inbox.');
       router.push('/login');
-    } catch (err: any) {
-      toast.error(err.message || 'Unexpected error.');
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="flex h-screen items-center justify-center">
-      <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center">Reset Your Password</h1>
-
-        <div>
-          <Label htmlFor="password">New Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+    <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center py-10">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-bold">Forgot Password</h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            Enter your email to receive a reset link
+          </p>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Updating...' : 'Update Password'}
-        </Button>
-      </form>
-    </div>
-  );
-}
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              placeholder="m@example.com"
+              required
+              type="email"
+            />
+          </div>
+          <Button className="w-full" disabled={isLoading}>
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
+          </Button>
+        </form>
 
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={<div className="text-center mt-10">Loading...</div>}>
-      <ResetPasswordForm />
-    </Suspense>
+        <div className="text-center text-sm">
+          <a className="underline" href="/login">
+            Back to Login
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
