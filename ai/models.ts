@@ -15,3 +15,6 @@ export const models: Array<Model> = [
     description: 'OpenAI’s most advanced language model, suitable for complex reasoning and detailed responses.',
   }
 ];
+
+// Set default model name used elsewhere in the app
+export const DEFAULT_MODEL_NAME = 'gpt-4.5-turbo';
