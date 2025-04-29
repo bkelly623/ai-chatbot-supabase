@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/server';
 const authFormSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  firstName: z.string().min(2).max(50), // Added validation for first name
+  lastName: z.string().min(2).max(50),  // Added validation for last name
 });
 
 export interface LoginActionState {
@@ -19,7 +21,7 @@ export const login = async (
   formData: FormData
 ): Promise<LoginActionState> => {
   try {
-    const validatedData = authFormSchema.parse({
+    const validatedData = authFormSchema.pick({ email: true, password: true }).parse({ // Only validate email and password for login
       email: formData.get('email'),
       password: formData.get('password'),
     });
@@ -62,6 +64,8 @@ export const register = async (
     const validatedData = authFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
+      firstName: formData.get('firstName'),  // Get first name from form
+      lastName: formData.get('lastName'),    // Get last name from form
     });
 
     const supabase = await createClient();
@@ -78,6 +82,10 @@ export const register = async (
       password: validatedData.password,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        data: {  // Store first and last name in user_metadata
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+        },
       },
     });
 
