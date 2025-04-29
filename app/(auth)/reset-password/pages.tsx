@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { createClient, User, Session } from '@supabase/supabase-js';  //  Updated import
+import { createClient, User, Session } from '@supabase/supabase-js';
 
 interface UpdateUserWithTokenOptions {
   token: string;
@@ -53,8 +53,8 @@ export default function ResetPasswordPage() {
       const supabase = createClient();
 
       const { data, error } = await supabase.auth.updateUser(
-        { password },
-        { token } as UpdateUserWithTokenOptions  //  Crucially, use our new type!
+        { password: password },  //  Attributes: password
+        { token: token } as UpdateUserWithTokenOptions   //  Options: token (and others)
       );
 
       if (error) {
