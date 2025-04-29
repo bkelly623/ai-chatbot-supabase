@@ -10,8 +10,7 @@ import { Label } from '@/components/ui/label';
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-interface UpdateUserWithTokenOptions {
-    token: string;
+interface UpdateUserOptions {
     password?: string;
 }
 
@@ -65,7 +64,7 @@ export default function ResetPasswordPage() {
         try {
             const { error: supabaseError } = await supabaseClient.auth.updateUser(
                 { password },
-                { token } as UpdateUserWithTokenOptions // Ensure correct type for options
+                { password: password } as UpdateUserOptions  // Correct type for password update
             );
 
             if (supabaseError) {
