@@ -14,8 +14,6 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const accessToken = searchParams.get('token'); // Get the token from the URL
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
@@ -26,11 +24,25 @@ function ResetPasswordForm() {
 
       const supabase = createClient();
 
+      const accessToken = searchParams.get('access_token'); // FIXED: correct token name
+
       if (!accessToken) {
         toast.error('Missing access token.');
         return;
       }
 
+      // FIXED: Set the session using the access token
+      const { data, error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '', // No refresh token available here
+      });
+
+      if (sessionError) {
+        toast.error(sessionError.message);
+        return;
+      }
+
+      // Now update the user's password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
