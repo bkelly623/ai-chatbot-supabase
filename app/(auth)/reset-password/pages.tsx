@@ -40,7 +40,10 @@ export default function ResetPasswordPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password }, { token });
+      const { error } = await supabase.auth.updateUser(
+        { password: password }, // Changed this line
+        { token: token }        // And this line
+      );
 
       if (error) {
         setError(error.message || 'Could not reset password.');
