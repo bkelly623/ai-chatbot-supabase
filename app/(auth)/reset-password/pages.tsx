@@ -54,8 +54,8 @@ export default function ResetPasswordPage() {
         setIsLoading(true);
         setError(null);
 
-        if (!supabaseClient || !token) {
-            console.warn('Supabase client not initialized or token missing.');
+        if (!supabaseClient) { //  Removed token check here, Supabase handles it
+            console.warn('Supabase client not initialized.');
             setError('Unable to reset password at this time.');
             setIsLoading(false);
             return;
@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
         try {
             const { error: supabaseError } = await supabaseClient.auth.updateUser(
                 { password } as UpdateUserAttributes, // Correct type for attributes
-                { token } // Token is passed directly in the options
+                {} //  Empty options object
             );
 
             if (supabaseError) {
