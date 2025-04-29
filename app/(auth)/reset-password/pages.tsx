@@ -1,59 +1,46 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { createClient, User, Session } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 interface UpdateUserWithTokenOptions {
     token: string;
-    email?: string;
     password?: string;
-    data?: object;
-    email_confirm?: boolean;
-    phone?: string;
-    phone_confirm?: boolean;
 }
-
-const getSupabaseClient = () => {
-    if (typeof window !== 'undefined') {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (supabaseUrl && supabaseKey) {
-            return createClient(supabaseUrl, supabaseKey);
-        } else {
-            console.error("Supabase URL or Key is missing!");
-            return null;
-        }
-    }
-    return null;
-};
 
 export default function ResetPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
-    const [token, setToken] = useState('');
+    const [token, setToken] = useState<string | null>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const supabaseClient = useRef<ReturnType<typeof getSupabaseClient>>(null);
-
-    useEffect(() => {
-        supabaseClient.current = getSupabaseClient();
-    }, []);
+    const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null);
 
     useEffect(() => {
         const token = searchParams.get('token');
-        if (token) {
-            setToken(token);
+        setToken(token);
+
+        // Initialize Supabase client only on the client-side
+        if (typeof window !== 'undefined') {
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            if (supabaseUrl && supabaseKey) {
+                setSupabaseClient(createClient(supabaseUrl, supabaseKey));
+            } else {
+                console.error('Supabase URL or Key is missing!');
+                setError('Supabase configuration error.');
+            }
         }
     }, [searchParams]);
 
@@ -66,29 +53,26 @@ export default function ResetPasswordPage() {
         }
 
         setIsLoading(true);
-        setError('');
+        setError(null);
+
+        if (!supabaseClient || !token) {
+            console.warn('Supabase client not initialized or token missing.');
+            setError('Unable to reset password at this time.');
+            setIsLoading(false);
+            return;
+        }
 
         try {
-            // Early return if supabaseClient.current is null
-            if (!supabaseClient.current) {
-                console.warn("Supabase client is not initialized.");
-                setError("Could not connect to the server.");
-                return; // Exit the function early
-            }
-
-            // Non-null assertion operator (!) - Use with caution!
-            const { data, error } = await (supabaseClient.current!).auth.updateUser(
-                { password: password },
-                { token: token } as UpdateUserWithTokenOptions
+            const { error: supabaseError } = await supabaseClient.auth.updateUser(
+                { password },
+                { token } as UpdateUserWithTokenOptions // Ensure correct type for options
             );
 
-            if (error) {
-                setError(error.message || 'Could not reset password.');
+            if (supabaseError) {
+                setError(supabaseError.message || 'Could not reset password.');
             } else {
                 setSuccess(true);
             }
-
-
         } catch (err) {
             setError('An unexpected error occurred.');
         } finally {
@@ -148,8 +132,7 @@ export default function ResetPasswordPage() {
                         />
                     </div>
                     <Button className="w-full" disabled={isLoading}>
-                        {isLoading ?
-                            'Resetting...' : 'Reset Password'}
+                        {isLoading ? 'Resetting...' : 'Reset Password'}
                     </Button>
                 </form>
             </div>
