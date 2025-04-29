@@ -23,8 +23,11 @@ export default function ForgotPasswordPage() {
 
       const supabase = createClient();
 
-      // REMOVE the redirectTo parameter
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const redirectToUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?access_token=%TOKEN%&type=%TYPE%`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectToUrl,
+      });
 
       if (error) {
         toast.error(error.message);
