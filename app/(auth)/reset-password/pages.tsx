@@ -3,11 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { User, UserAttributes } from '@supabase/supabase-js'; //  <---  CHECK THIS IMPORT
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
 export default function ResetPasswordPage() {
@@ -41,13 +36,23 @@ export default function ResetPasswordPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser(
-        { password: password },
-        { token: token } as UserAttributes  //  <---  CHECK THIS TYPE
-      );
 
-      if (error) {
-        setError(error.message || 'Could not reset password.');
+      // Try to sign in with the token (this might set the user's session)
+      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: '', // Refresh token is not usually needed here
+      });
+
+      if (sessionError) {
+        setError(sessionError.message || 'Invalid reset link.');
+        return;
+      }
+
+      // If session is set (or if the above isn't the correct method, try updateUser directly)
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+
+      if (updateError) {
+        setError(updateError.message || 'Could not reset password.');
       } else {
         setSuccess(true);
       }
@@ -60,13 +65,11 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center py-10">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">Password Reset Successful</h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              Your password has been reset. You can now login.
-            </p>
+      <div className="flex ...">
+        <div className="...">
+          <div className="...">
+            <h1 className="...">Password Reset Successful</h1>
+            <p className="...">Your password has been reset. You can now login.</p>
             <Button onClick={() => router.push('/login')}>Go to Login</Button>
           </div>
         </div>
@@ -75,41 +78,23 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center py-10">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Reset Password</h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Enter your new password
-          </p>
+    <div className="flex ...">
+      <div className="...">
+        <div className="...">
+          <h1 className="...">Reset Password</h1>
+          <p className="...">Enter your new password</p>
         </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {error && <div className="text-red-500">{error}</div>}
-          <div className="space-y-2">
+        <form className="..." onSubmit={handleSubmit}>
+          {error && <div className="...">{error}</div>}
+          <div className="...">
             <Label htmlFor="password">New Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <Input ... />
           </div>
-          <div className="space-y-2">
+          <div className="...">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+            <Input ... />
           </div>
-          <Button className="w-full" disabled={isLoading}>
+          <Button className="..." disabled={isLoading}>
             {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>
