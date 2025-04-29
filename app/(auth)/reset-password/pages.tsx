@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const resetCode = searchParams.get('code');  //  Corrected parameter name
+    const resetCode = searchParams.get('code');
     if (resetCode) {
       setToken(resetCode);
     }
