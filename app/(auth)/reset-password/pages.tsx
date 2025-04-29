@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react'; // Added useRef
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,6 @@ interface UpdateUserWithTokenOptions {
     phone_confirm?: boolean;
 }
 
-// Lazy initialization of Supabase client
 const getSupabaseClient = () => {
     if (typeof window !== 'undefined') {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,10 +28,10 @@ const getSupabaseClient = () => {
             return createClient(supabaseUrl, supabaseKey);
         } else {
             console.error("Supabase URL or Key is missing!");
-            return null; // Or throw an error, depending on your error handling strategy
+            return null;
         }
     }
-    return null; // Return null outside browser environment
+    return null;
 };
 
 export default function ResetPasswordPage() {
@@ -45,8 +44,7 @@ export default function ResetPasswordPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // Use useRef to store the client
-    const supabaseClient = useRef(null);
+    const supabaseClient = useRef<ReturnType<typeof getSupabaseClient>>(null); // Explicit type for useRef
 
     useEffect(() => {
         supabaseClient.current = getSupabaseClient();
@@ -72,7 +70,7 @@ export default function ResetPasswordPage() {
 
         try {
             if (supabaseClient.current) {
-                const { data, error } = await supabaseClient.current.auth.updateUser(
+                const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser( // Type assertion here
                     { password: password },
                     { token: token } as UpdateUserWithTokenOptions
                 );
