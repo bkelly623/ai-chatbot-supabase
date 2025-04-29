@@ -8,7 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { createClient } from '@/lib/supabase/client';
+import { createClient, User, Session } from '@supabase/supabase-js';  //  Updated import
+
+interface UpdateUserWithTokenOptions {
+  token: string;
+  email?: string;
+  password?: string;
+  data?: object;
+  email_confirm?: boolean;
+  phone?: string;
+  phone_confirm?: boolean;
+}
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +52,10 @@ export default function ResetPasswordPage() {
     try {
       const supabase = createClient();
 
-      const { data, error } = await supabase.auth.updateUser({ password }, { token });
+      const { data, error } = await supabase.auth.updateUser(
+        { password },
+        { token } as UpdateUserWithTokenOptions  //  Crucially, use our new type!
+      );
 
       if (error) {
         setError(error.message || 'Could not reset password.');
