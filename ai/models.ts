@@ -1,5 +1,3 @@
-// Define your models here.
-
 export interface Model {
   id: string;
   label: string;
@@ -9,17 +7,11 @@ export interface Model {
 
 export const models: Array<Model> = [
   {
-    id: 'gpt-4o-mini',
-    label: 'GPT 4o mini',
-    apiIdentifier: 'gpt-4o-mini',
-    description: 'Small model for fast, lightweight tasks',
-  },
-  {
-    id: 'gpt-4o',
-    label: 'GPT 4o',
-    apiIdentifier: 'gpt-4o',
-    description: 'For complex, multi-step tasks',
-  },
-] as const;
+    id: 'gpt-4.5-turbo',
+    label: 'GPT-4.5 Turbo',
+    apiIdentifier: 'gpt-4-turbo', // OpenAI's expected model identifier
+    description: 'OpenAI’s most advanced model for reasoning and detailed responses.',
+  }
+];
 
-export const DEFAULT_MODEL_NAME: string = 'gpt-4o-mini';
+export const DEFAULT_MODEL_NAME = 'gpt-4.5-turbo';
