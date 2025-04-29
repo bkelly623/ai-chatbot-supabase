@@ -76,10 +76,12 @@ export default function ResetPasswordPage() {
                 return; // Exit the function early
             }
 
-            const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser(
+            // Non-null assertion operator (!) - Use with caution!
+            const { data, error } = await (supabaseClient.current!).auth.updateUser(
                 { password: password },
                 { token: token } as UpdateUserWithTokenOptions
             );
+
             if (error) {
                 setError(error.message || 'Could not reset password.');
             } else {
