@@ -22,8 +22,13 @@ export default function ForgotPasswordPage() {
       const email = formData.get('email') as string;
 
       const supabase = createClient();
+
+      // Use the full URL stored in NEXT_PUBLIC_SITE_URL — no additional path
+      const redirectToUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      console.log('Redirecting to:', redirectToUrl);
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+        redirectTo: redirectToUrl,
       });
 
       if (error) {
@@ -31,10 +36,10 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      toast.success('Password reset email sent. Check your inbox.');
+      toast.success('Password reset email sent.');
       router.push('/login');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +61,7 @@ export default function ForgotPasswordPage() {
             <Input
               id="email"
               name="email"
-              placeholder="m@example.com"
+              placeholder="you@example.com"
               required
               type="email"
             />
