@@ -8,17 +8,17 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { signUp } from '@/db/auth'; // Assuming this is the correct import path
+import { signUp } from '@/db/auth';
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState(''); // State for password mismatch error
+  const [passwordError, setPasswordError] = useState('');
   const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    setPasswordError(''); // Clear any previous password error
+    setPasswordError('');
 
     try {
       const formData = new FormData(event.currentTarget);
@@ -33,7 +33,7 @@ export default function RegisterPage() {
         return;
       }
 
-      await signUp(email, password, firstName, lastName); // Updated signUp call
+      await signUp(email, password, firstName, lastName);
       toast.success('Check your email to confirm your account');
       router.push('/login');
     } catch (error: any) {
@@ -97,7 +97,7 @@ export default function RegisterPage() {
               type="password"
             />
           </div>
-          {passwordError && <p className="text-red-500">{passwordError}</p>} {/* Display password mismatch error */}
+          {passwordError && <p className="text-red-500">{passwordError}</p>}
           <Button className="w-full" disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Register'}
           </Button>
