@@ -22,9 +22,9 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const resetCode = searchParams.get('code');
+    const resetCode = searchParams.get('code');  //  Correct: Extract 'code'
     if (resetCode) {
-      setToken(resetCode);
+      setToken(resetCode);  //  Store it in 'token' (we can rename this if needed for clarity)
     }
   }, [searchParams]);
 
@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
 
       const { data, error } = await supabase.auth.updateUser(
         { password: password },
-        { token: token }
+        { token: token }  //  Use 'token' (which now holds the value of 'code')
       );
 
       if (error) {
