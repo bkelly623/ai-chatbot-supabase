@@ -9,17 +9,9 @@ export interface Model {
 
 export const models: Array<Model> = [
   {
-    id: 'gpt-4o-mini',
-    label: 'GPT 4o mini',
-    apiIdentifier: 'gpt-4o-mini',
-    description: 'Small model for fast, lightweight tasks',
-  },
-  {
-    id: 'gpt-4o',
-    label: 'GPT 4o',
-    apiIdentifier: 'gpt-4o',
-    description: 'For complex, multi-step tasks',
-  },
-] as const;
-
-export const DEFAULT_MODEL_NAME: string = 'gpt-4o-mini';
+    id: 'gpt-4.5-turbo',
+    label: 'GPT 4.5 Turbo',
+    apiIdentifier: 'gpt-4.5-turbo',
+    description: 'OpenAI’s most advanced language model, suitable for complex reasoning and detailed responses.',
+  }
+];
