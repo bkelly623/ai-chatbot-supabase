@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,14 @@ import { createClient } from '@/lib/supabase/client';
 
 function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const token = searchParams.get('access_token');
+    setAccessToken(token);
+  }, [searchParams]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,17 +30,15 @@ function ResetPasswordForm() {
 
       const supabase = createClient();
 
-      const accessToken = searchParams.get('access_token'); // FIXED: correct token name
-
       if (!accessToken) {
         toast.error('Missing access token.');
         return;
       }
 
-      // FIXED: Set the session using the access token
+      // Set the session using the access token
       const { data, error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
-        refresh_token: '', // No refresh token available here
+        refresh_token: '',
       });
 
       if (sessionError) {
