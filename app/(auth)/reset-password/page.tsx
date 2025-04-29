@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -9,9 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
-export default function ForgotPasswordPage() {
+export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const accessToken = searchParams.get('token'); // Get the token from the URL
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,14 +22,17 @@ export default function ForgotPasswordPage() {
 
     try {
       const formData = new FormData(event.currentTarget);
-      const email = formData.get('email') as string;
+      const newPassword = formData.get('password') as string;
 
       const supabase = createClient();
 
-      const redirectToUrl = 'https://ai-chatbot-supabase-theta.vercel.app/reset-password';
+      if (!accessToken) {
+        toast.error('Missing access token.');
+        return;
+      }
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectToUrl,
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
       });
 
       if (error) {
@@ -34,7 +40,7 @@ export default function ForgotPasswordPage() {
         return;
       }
 
-      toast.success('Password reset email sent.');
+      toast.success('Password updated successfully.');
       router.push('/login');
     } catch (error: any) {
       toast.error(error.message || 'An error occurred.');
@@ -47,25 +53,25 @@ export default function ForgotPasswordPage() {
     <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center py-10">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Forgot Password</h1>
+          <h1 className="text-3xl font-bold">Reset Password</h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Enter your email to receive a reset link
+            Enter your new password below
           </p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="password">New Password</Label>
             <Input
-              id="email"
-              name="email"
-              placeholder="you@example.com"
+              id="password"
+              name="password"
+              placeholder="New password"
               required
-              type="email"
+              type="password"
             />
           </div>
           <Button className="w-full" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
+            {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>
 
