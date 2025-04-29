@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const supabaseClient = useRef<ReturnType<typeof getSupabaseClient>>(null); // Explicit type for useRef
+    const supabaseClient = useRef<ReturnType<typeof getSupabaseClient>>(null);
 
     useEffect(() => {
         supabaseClient.current = getSupabaseClient();
@@ -70,15 +70,19 @@ export default function ResetPasswordPage() {
 
         try {
             if (supabaseClient.current) {
-                const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser( // Type assertion here
-                    { password: password },
-                    { token: token } as UpdateUserWithTokenOptions
-                );
-                if (error) {
-                    setError(error.message || 'Could not reset password.');
-                } else {
-                    setSuccess(true);
+                // Double-check for null before accessing
+                if (supabaseClient.current) {
+                    const { data, error } = await (supabaseClient.current as ReturnType<typeof getSupabaseClient>).auth.updateUser(
+                        { password: password },
+                        { token: token } as UpdateUserWithTokenOptions
+                    );
+                    if (error) {
+                        setError(error.message || 'Could not reset password.');
+                    } else {
+                        setSuccess(true);
+                    }
                 }
+
             } else {
                 console.warn("Supabase client is not initialized.");
                 setError("Could not connect to the server.");
