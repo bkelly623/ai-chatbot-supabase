@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,21 +13,20 @@ import { createClient } from '@/lib/supabase/client';
 function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // Wait for Supabase to populate session from cookie
     const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
+      const { data } = await supabase.auth.getSession();
       if (data.session) {
         setSessionReady(true);
       } else {
         toast.error('Auth session missing!');
       }
     };
-
     checkSession();
   }, [supabase]);
 
@@ -34,26 +34,26 @@ function ResetPasswordForm() {
     event.preventDefault();
     setIsLoading(true);
 
-    try {
-      const formData = new FormData(event.currentTarget);
-      const newPassword = formData.get('password') as string;
+    const formData = new FormData(event.currentTarget);
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
 
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match.");
+      setIsLoading(false);
+      return;
+    }
 
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
+    const { error } = await supabase.auth.updateUser({ password });
 
+    if (error) {
+      toast.error(error.message);
+    } else {
       toast.success('Password updated successfully.');
       router.push('/login');
-    } catch (error: any) {
-      toast.error(error.message || 'An error occurred.');
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   }
 
   if (!sessionReady) {
@@ -75,16 +75,44 @@ function ResetPasswordForm() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="password">New Password</Label>
             <Input
               id="password"
               name="password"
               placeholder="New password"
               required
-              type="password"
+              type={showPassword ? 'text' : 'password'}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-[38px]"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
+
+          <div className="space-y-2 relative">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm password"
+              required
+              type={showConfirmPassword ? 'text' : 'password'}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-2 top-[38px]"
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
           <Button className="w-full" disabled={isLoading}>
             {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
