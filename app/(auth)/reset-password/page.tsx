@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,24 @@ import { createClient } from '@/lib/supabase/client';
 
 function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const supabase = createClient();
 
   useEffect(() => {
-    const token = searchParams.get('access_token');
-    setAccessToken(token);
-  }, [searchParams]);
+    // Wait for Supabase to populate session from cookie
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (data.session) {
+        setSessionReady(true);
+      } else {
+        toast.error('Auth session missing!');
+      }
+    };
+
+    checkSession();
+  }, [supabase]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,25 +38,6 @@ function ResetPasswordForm() {
       const formData = new FormData(event.currentTarget);
       const newPassword = formData.get('password') as string;
 
-      const supabase = createClient();
-
-      if (!accessToken) {
-        toast.error('Missing access token.');
-        return;
-      }
-
-      // Set the session using the access token
-      const { data, error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: '',
-      });
-
-      if (sessionError) {
-        toast.error(sessionError.message);
-        return;
-      }
-
-      // Now update the user's password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -63,6 +54,14 @@ function ResetPasswordForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p>Loading session...</p>
+      </div>
+    );
   }
 
   return (
