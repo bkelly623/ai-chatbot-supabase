@@ -22,18 +22,22 @@ export default function ForgotPasswordPage() {
       const email = formData.get('email') as string;
 
       const supabase = createClient();
+
+      const redirectToUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`;
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
+        redirectTo: redirectToUrl,
       });
 
       if (error) {
-        throw error;
+        toast.error(error.message);
+        return;
       }
 
-      toast.success('Password reset email sent. Check your inbox.');
+      toast.success('Password reset email sent.');
       router.push('/login');
     } catch (error: any) {
-      toast.error(error.message || 'Something went wrong.');
+      toast.error(error.message || 'An error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -45,16 +49,17 @@ export default function ForgotPasswordPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold">Forgot Password</h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Enter your email to reset your password
+            Enter your email to receive a reset link
           </p>
         </div>
+
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               name="email"
-              placeholder="m@example.com"
+              placeholder="you@example.com"
               required
               type="email"
             />
@@ -63,6 +68,12 @@ export default function ForgotPasswordPage() {
             {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
         </form>
+
+        <div className="text-center text-sm">
+          <a className="underline" href="/login">
+            Back to Login
+          </a>
+        </div>
       </div>
     </div>
   );
