@@ -41,14 +41,18 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([{ user_id: user?.id, name: newProjectName }])
-      .select();
+    if (user?.id) {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{ user_id: user.id, name: newProjectName }])
+        .select();
 
-    if (!error && data?.length) {
-      setProjects((prev) => [data[0], ...prev]);
-      setNewProjectName('');
+      if (!error && data?.length) {
+        setProjects((prev) => [data[0], ...prev]);
+        setNewProjectName('');
+      }
+    } else {
+      console.warn("User ID is not available. Project creation failed.");
     }
   };
 
