@@ -3,7 +3,6 @@
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-import SidebarProjects from '@/components/custom/sidebar-projects';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
@@ -19,6 +18,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
+import SidebarProjects from '@/components/custom/sidebar-projects';
 
 export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
@@ -59,8 +59,8 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarProjects user={user ?? undefined} />
           <SidebarHistory user={user ?? undefined} />
+          <SidebarProjects user={user ?? undefined} />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="gap-0">
