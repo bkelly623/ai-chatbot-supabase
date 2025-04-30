@@ -28,35 +28,54 @@ export function AppSidebar({ user }: { user: User | null }) {
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
         <SidebarMenu>
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-6 w-6 border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground hover:text-white"
+          <div className="flex flex-row justify-between items-center">
+            <div
               onClick={() => {
-                router.push('/');
                 setOpenMobile(false);
+                router.push('/');
+                router.refresh();
               }}
+              className="flex flex-row gap-3 items-center"
             >
-              <PlusIcon size={12} />
-              <span className="sr-only">New chat</span>
-            </Button>
-            <BetterTooltip side="bottom" content={<span className="text-xs text-muted-foreground">New chat</span>}>
-              {/* No need for the child span here anymore */}
+              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
+                Chatbot
+              </span>
+            </div>
+            <BetterTooltip content="New Chat" align="start">
+              <Button
+                variant="ghost"
+                className="p-2 h-fit"
+                onClick={() => {
+                  setOpenMobile(false);
+                  router.push('/');
+                  router.refresh();
+                }}
+              >
+                <PlusIcon />
+              </Button>
             </BetterTooltip>
           </div>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarHistory user={user ?? undefined} />
+        </SidebarGroup>
+        <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarHistory user={user} />
             <SidebarProjects user={user} />
-            <SidebarUserNav user={user} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter className="gap-0">
+        {user && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarUserNav user={user} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }
