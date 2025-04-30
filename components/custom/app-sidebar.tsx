@@ -29,19 +29,20 @@ export function AppSidebar({ user }: { user: User | null }) {
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex items-center gap-1.5">
-            <BetterTooltip side="bottom" content="New chat">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-6 w-6 border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground hover:text-white"
-                onClick={() => {
-                  router.push('/');
-                  setOpenMobile(false);
-                }}
-              >
-                <PlusIcon size={12} />
-                <span className="sr-only">New chat</span>
-              </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-6 w-6 border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground hover:text-white"
+              onClick={() => {
+                router.push('/');
+                setOpenMobile(false);
+              }}
+            >
+              <PlusIcon size={12} />
+              <span className="sr-only">New chat</span>
+            </Button>
+            <BetterTooltip side="bottom" content={<span className="text-xs text-muted-foreground">New chat</span>}>
+              {/* No need for the child span here anymore */}
             </BetterTooltip>
           </div>
         </SidebarMenu>
