@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
-import { SidebarProjects } from '@/components/custom/sidebar-projects'; // ADDED
+import SidebarProjects from '@/components/custom/sidebar-projects'; // FIXED
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -59,7 +59,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarProjects user={user ?? undefined} /> {/* ADDED */}
+          <SidebarProjects user={user ?? undefined} />
           <SidebarHistory user={user ?? undefined} />
         </SidebarGroup>
       </SidebarContent>
