@@ -1,27 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
+import { useUser } from '@/lib/hooks/use-user';
 
-interface SidebarProjectsProps {
-  user?: User;
-}
-
-export default function SidebarProjects({ user }: SidebarProjectsProps) {
+export default function SidebarProjects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
+  const { user } = useUser();
   const supabase = createClient();
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchProjects(user.id);
-    }
-  }, [user, fetchProjects]);
 
   const fetchProjects = async (uid: string) => {
     const { data, error } = await supabase
@@ -34,6 +24,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       setProjects(data || []);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchProjects(user.id);
+    }
+  }, [user]);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim() || !user?.id) return;
@@ -70,7 +66,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="size-4" />
+          <Plus className="w-4 h-4" />
         </Button>
       </div>
     </div>
