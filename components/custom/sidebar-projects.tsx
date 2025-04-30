@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { Database } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
+
+type Project = Database['public']['Tables']['projects']['Row'];
 
 interface SidebarProjectsProps {
   user?: {
@@ -13,7 +16,7 @@ interface SidebarProjectsProps {
 }
 
 export default function SidebarProjects({ user }: SidebarProjectsProps) {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
   const supabase = createClient();
 
@@ -32,8 +35,8 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (!error) {
-      setProjects(data || []);
+    if (!error && data) {
+      setProjects(data);
     }
   };
 
