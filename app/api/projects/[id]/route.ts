@@ -3,10 +3,10 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
 export async function PUT(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
-  const { name } = await req.json()
+  const { name } = await request.json()
   const cookieStore = cookies()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,7 +42,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   const cookieStore = cookies()
