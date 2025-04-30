@@ -24,6 +24,9 @@ export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
+  // Explicitly define historyUser as User or undefined
+  const historyUser: User | undefined = user === null ? undefined : user;
+
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
@@ -59,7 +62,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarHistory user={user ?? undefined} />
+          <SidebarHistory user={historyUser} />
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupContent>
