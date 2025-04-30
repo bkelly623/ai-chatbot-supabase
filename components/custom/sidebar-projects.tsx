@@ -23,7 +23,7 @@ export function SidebarProjects({ user }: SidebarProjectsProps) {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', user?.id)
+      .eq('user_id', user!.id) // FIX APPLIED HERE
       .order('created_at', { ascending: false });
 
     if (!error) {
