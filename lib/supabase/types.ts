@@ -6,6 +6,15 @@ export type Json =
   | { [key: string]: Json }
   | Json[]
 
+export type MessageRole = 'system' | 'user' | 'assistant'
+
+export type Message = {
+  id: string
+  created_at: string
+  content: string
+  role: MessageRole
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -13,6 +22,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          messages: Message[]
           title: string | null
           updated_at: string
           user_id: string
@@ -20,6 +30,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          messages: Message[]
           title?: string | null
           updated_at?: string
           user_id: string
@@ -27,16 +38,17 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          messages?: Message[]
           title?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chats_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: 'chats_user_id_fkey'
+            columns: ['user_id']
+            referencedRelation: 'users'
+            referencedColumns: ['id']
           }
         ]
       },
