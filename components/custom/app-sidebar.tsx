@@ -24,6 +24,13 @@ export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
+  // Function to safely convert User | null to User | undefined
+  const getSafeUser = (): User | undefined => {
+    return user === null ? undefined : user;
+  };
+
+  const safeUser = getSafeUser();
+
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
@@ -59,11 +66,11 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarHistory user={user ? user : undefined} />
+          <SidebarHistory user={safeUser} />
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarProjects user={user} />
+            <SidebarProjects user={safeUser} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
