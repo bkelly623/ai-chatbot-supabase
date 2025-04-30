@@ -1,14 +1,10 @@
-import { createClientComponentClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const cookieStore = cookies()
-  const supabase = createClientComponentClient({ cookies: () => cookieStore })
+  const supabase = createClient()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 })
@@ -29,12 +25,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const { name } = await req.json()
-  const cookieStore = cookies()
-  const supabase = createClientComponentClient({ cookies: () => cookieStore })
+  const supabase = createClient()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 })
