@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
+
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
     if (user?.id) {
       fetchProjects(user.id);
     }
-  }, [user]);
+  }, [user, fetchProjects]);
 
   const fetchProjects = async (uid: string) => {
     const { data, error } = await supabase
@@ -69,7 +70,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="w-4 h-4" />
+          <Plus className="size-4" />
         </Button>
       </div>
     </div>
