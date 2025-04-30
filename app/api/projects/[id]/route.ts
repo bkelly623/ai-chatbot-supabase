@@ -1,5 +1,4 @@
-import { createClientComponentClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function PUT(
@@ -7,12 +6,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const { name } = await req.json()
-  const cookieStore = cookies()
-  const supabase = createClientComponentClient({ cookies: () => cookieStore })
+  const supabase = createClient()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 })
@@ -37,12 +33,9 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const cookieStore = cookies()
-  const supabase = createClientComponentClient({ cookies: () => cookieStore })
+  const supabase = createClient()
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 })
