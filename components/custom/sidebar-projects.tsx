@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,22 +9,28 @@ import { Plus } from 'lucide-react';
 export default function SidebarProjects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
-  const user = useUser();
+  const [userId, setUserId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
-    if (user?.id) {
-      fetchProjects();
-    }
-  }, [user]);
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.id) {
+        setUserId(user.id);
+        fetchProjects(user.id);
+      }
+    };
 
-  const fetchProjects = async () => {
-    if (!user?.id) return;
+    fetchUser();
+  }, []);
 
+  const fetchProjects = async (uid: string) => {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', uid)
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -34,11 +39,11 @@ export default function SidebarProjects() {
   };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim() || !user?.id) return;
+    if (!newProjectName.trim() || !userId) return;
 
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ user_id: user.id, name: newProjectName }])
+      .insert([{ user_id: userId, name: newProjectName }])
       .select();
 
     if (!error && data?.length) {
