@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
+
 import type { User } from '@supabase/supabase-js';
 
 interface SidebarProjectsProps {
@@ -17,12 +18,11 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Add loading state
-  const [error, setError] = useState<string | null>(null); // Add error state
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
   const router = useRouter();
 
-  // Fetch projects with useCallback to prevent unnecessary re-renders
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -126,7 +126,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           value={newProjectName}
           onChange={e => {
             setNewProjectName(e.target.value);
-            setError(null); // Clear error on input change
+            setError(null);
           }}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject} disabled={loading}>
