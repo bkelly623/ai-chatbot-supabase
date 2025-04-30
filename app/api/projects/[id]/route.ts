@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const { name } = await request.json()
   const cookieStore = cookies()
@@ -29,7 +29,7 @@ export async function PUT(
   const { data, error } = await supabase
     .from('projects')
     .update({ name })
-    .eq('id', params.id)
+    .eq('id', context.params.id)
     .eq('user_id', user.id)
     .select()
     .single()
@@ -43,7 +43,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const cookieStore = cookies()
   const supabase = createClient(
@@ -69,14 +69,14 @@ export async function DELETE(
   await supabase
     .from('chats')
     .update({ project_id: null })
-    .eq('project_id', params.id)
+    .eq('project_id', context.params.id)
     .eq('user_id', user.id)
 
   // Then delete the project
   const { error } = await supabase
     .from('projects')
     .delete()
-    .eq('id', params.id)
+    .eq('id', context.params.id)
     .eq('user_id', user.id)
 
   if (error) {
