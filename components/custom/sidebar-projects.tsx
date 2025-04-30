@@ -24,10 +24,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   }, [user?.id]);
 
   const fetchProjects = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', user?.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -36,10 +38,11 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim() || !user?.id) return;
+
     const { error } = await supabase
       .from('projects')
-      .insert([{ user_id: user?.id, name: newProjectName }]);
+      .insert([{ user_id: user.id, name: newProjectName }]);
 
     if (!error) {
       fetchProjects();
