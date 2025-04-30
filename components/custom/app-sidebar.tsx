@@ -3,10 +3,10 @@
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
+import SidebarProjects from '@/components/custom/sidebar-projects';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
-import SidebarProjects from '@/components/custom/sidebar-projects'; // FIXED
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
