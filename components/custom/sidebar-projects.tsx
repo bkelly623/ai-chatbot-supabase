@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { Plus } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
 
 interface SidebarProjectsProps {
-  user: User | undefined;
+  user?: User;
 }
 
 export default function SidebarProjects({ user }: SidebarProjectsProps) {
@@ -16,25 +17,23 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [newProjectName, setNewProjectName] = useState('');
   const supabase = createClient();
 
-  const fetchProjects = async () => {
-    if (!user?.id) return;
-
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error) {
-      setProjects(data || []);
-    }
-  };
-
   useEffect(() => {
-    if (user) {
-      fetchProjects();
+    const fetchProjects = async (uid: string) => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+
+      if (!error) {
+        setProjects(data || []);
+      }
+    };
+
+    if (user?.id) {
+      fetchProjects(user.id);
     }
-  }, [user, fetchProjects]); // FIXED dependency warning
+  }, [user]);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim() || !user?.id) return;
@@ -66,12 +65,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       <div className="flex gap-2 pt-2">
         <Input
           className="text-sm"
-          placeholder="New project..."
+          placeholder="New project."
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="size-4" /> {/* FIXED Tailwind warning */}
+          <Plus className="size-4" />
         </Button>
       </div>
     </div>
