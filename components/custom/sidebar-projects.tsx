@@ -22,20 +22,20 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      let query = supabase.from('projects').select('*').order('created_at', { ascending: false });
+
+      if (user?.id) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (!error) {
         setProjects(data || []);
       }
     };
 
-    if (user) {
-      fetchProjects();
-    }
+    fetchProjects();
   }, [user, supabase]);
 
   const handleCreateProject = async () => {
@@ -82,7 +82,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="size-4" />
+          <Plus className="h-4 w-4" />
         </Button>
       </div>
     </div>
