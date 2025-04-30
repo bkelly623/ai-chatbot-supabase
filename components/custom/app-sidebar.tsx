@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import SidebarProjects from '@/components/custom/sidebar-projects';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
+import { SidebarUserNav } from '@/components/custom/sidebar-nav';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -23,9 +23,6 @@ import { BetterTooltip } from '@/components/ui/tooltip';
 export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
-
-  // Explicitly define historyUser as User or undefined
-  const historyUser: User | undefined = user === null ? undefined : user;
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -62,7 +59,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarHistory user={historyUser} />
+          <SidebarHistory user={user ? user : undefined} />
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupContent>
