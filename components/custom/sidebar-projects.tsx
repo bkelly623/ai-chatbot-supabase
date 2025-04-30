@@ -1,29 +1,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUser } from '@supabase/auth-helpers-react';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 
-interface SidebarProjectsProps {
-  user?: { id: string };
-}
-
-export function SidebarProjects({ user }: SidebarProjectsProps) {
+export default function SidebarProjects() {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
+  const user = useUser();
   const supabase = createClient();
 
   useEffect(() => {
-    if (user?.id) fetchProjects();
+    if (user?.id) {
+      fetchProjects();
+    }
   }, [user]);
 
   const fetchProjects = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', user!.id) // FIX APPLIED HERE
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -32,10 +34,11 @@ export function SidebarProjects({ user }: SidebarProjectsProps) {
   };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim() || !user?.id) return;
+
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ user_id: user?.id, name: newProjectName }])
+      .insert([{ user_id: user.id, name: newProjectName }])
       .select();
 
     if (!error && data?.length) {
@@ -45,19 +48,19 @@ export function SidebarProjects({ user }: SidebarProjectsProps) {
   };
 
   return (
-    <div className="mb-4">
-      <h2 className="text-xs font-semibold text-muted-foreground mb-2">Projects</h2>
-      <div className="space-y-1 mb-3">
+    <div className="p-2 space-y-2">
+      <h2 className="text-sm font-semibold text-muted-foreground">Projects</h2>
+      <div className="space-y-1">
         {projects.map((project) => (
           <div
             key={project.id}
-            className="text-sm text-white px-2 py-1 rounded hover:bg-muted cursor-pointer truncate"
+            className="text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer"
           >
             {project.name}
           </div>
         ))}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-2">
         <Input
           className="text-sm"
           placeholder="New project..."
