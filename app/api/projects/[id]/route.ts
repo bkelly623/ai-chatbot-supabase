@@ -1,12 +1,24 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   const { name } = await req.json()
-  const supabase = createClient()
+  const cookieStore = cookies()
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
 
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -33,7 +45,18 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createClient()
+  const cookieStore = cookies()
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
 
   const { data: { user } } = await supabase.auth.getUser()
 
