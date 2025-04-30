@@ -37,13 +37,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('projects')
-      .insert([{ user_id: user?.id, name: newProjectName }])
-      .select();
+      .insert([{ user_id: user?.id, name: newProjectName }]);
 
-    if (!error && data?.length) {
-      setProjects((prev) => [data[0], ...prev]);
+    if (!error) {
+      fetchProjects();
       setNewProjectName('');
     }
   };
@@ -53,7 +52,10 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       <h2 className="text-sm font-semibold text-muted-foreground">Projects</h2>
       <div className="space-y-1">
         {projects.map((project) => (
-          <div key={project.id} className="text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer">
+          <div
+            key={project.id}
+            className="text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer"
+          >
             {project.name}
           </div>
         ))}
