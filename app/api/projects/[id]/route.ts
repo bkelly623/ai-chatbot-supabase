@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClientComponentClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -7,7 +7,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const { name } = await req.json()
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createClientComponentClient({ cookies: () => cookieStore })
 
   const {
     data: { user }
@@ -36,7 +37,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createClientComponentClient({ cookies: () => cookieStore })
 
   const {
     data: { user }
