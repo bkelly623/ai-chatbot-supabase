@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import SidebarProjects from '@/components/custom/sidebar-projects';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import { SidebarUserNav } from '@/components/custom/sidebar-nav';
+import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
