@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 interface SidebarProjectsProps {
   user: User | undefined;
@@ -15,7 +16,9 @@ interface SidebarProjectsProps {
 export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -49,6 +52,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
     }
   };
 
+  const handleSelectProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    // Navigate the user to the main chat view, passing the projectId as a query parameter
+    router.push(`/?projectId=${projectId}`);
+  };
+
   return (
     <div className="p-2 space-y-2">
       <h2 className="text-sm font-semibold text-muted-foreground">Projects</h2>
@@ -56,7 +65,10 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
         {projects.map((project) => (
           <div
             key={project.id}
-            className="text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer"
+            className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer ${
+              selectedProjectId === project.id ? 'bg-muted' : ''
+            }`}
+            onClick={() => handleSelectProject(project.id)}
           >
             {project.name}
           </div>
