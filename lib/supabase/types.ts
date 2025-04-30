@@ -13,6 +13,7 @@ export type Message = {
   created_at: string
   content: string
   role: MessageRole
+  chat_id: string
 }
 
 export type Database = {
