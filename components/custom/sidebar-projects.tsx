@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 interface SidebarProjectsProps {
-  user?: User;
+  user: User | undefined;
 }
 
 export default function SidebarProjects({ user }: SidebarProjectsProps) {
@@ -16,11 +16,13 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [newProjectName, setNewProjectName] = useState('');
   const supabase = createClient();
 
-  const fetchProjects = async (uid: string) => {
+  const fetchProjects = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', uid)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (!error) {
@@ -29,10 +31,10 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   };
 
   useEffect(() => {
-    if (user?.id) {
-      fetchProjects(user.id);
+    if (user) {
+      fetchProjects();
     }
-  }, [user]);
+  }, [user, fetchProjects]); // FIXED dependency warning
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim() || !user?.id) return;
@@ -69,7 +71,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="w-4 h-4" />
+          <Plus className="size-4" /> {/* FIXED Tailwind warning */}
         </Button>
       </div>
     </div>
