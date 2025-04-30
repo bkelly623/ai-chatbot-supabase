@@ -5,12 +5,15 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
-import { useUser } from '@/lib/hooks/use-user';
+import type { User } from '@supabase/supabase-js';
 
-export default function SidebarProjects() {
+interface SidebarProjectsProps {
+  user?: User;
+}
+
+export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
-  const { user } = useUser();
   const supabase = createClient();
 
   const fetchProjects = async (uid: string) => {
