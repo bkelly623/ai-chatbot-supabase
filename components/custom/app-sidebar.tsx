@@ -41,7 +41,7 @@ export function AppSidebar({ user }: { user: User | null }) {
               <PlusIcon size={12} />
               <span className="sr-only">New chat</span>
             </Button>
-            <BetterTooltip side="bottom" content="New chat">
+            <BetterTooltip side="bottom" content={<span>New chat</span>}>
               <span className="text-xs text-muted-foreground">New chat</span>
             </BetterTooltip>
           </div>
