@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 interface SidebarProjectsProps {
-  user?: User;
+  user: User | undefined;
 }
 
 export default function SidebarProjects({ user }: SidebarProjectsProps) {
@@ -18,11 +18,11 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const supabase = createClient();
 
   useEffect(() => {
-    const fetchProjects = async (uid: string) => {
+    const fetchProjects = async () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', uid)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (!error) {
@@ -30,17 +30,17 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       }
     };
 
-    if (user?.id) {
-      fetchProjects(user.id);
+    if (user) {
+      fetchProjects();
     }
-  }, [user]);
+  }, [user, supabase]);
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim() || !user?.id) return;
+    if (!newProjectName.trim()) return;
 
     const { data, error } = await supabase
       .from('projects')
-      .insert([{ user_id: user.id, name: newProjectName }])
+      .insert([{ user_id: user?.id, name: newProjectName }])
       .select();
 
     if (!error && data?.length) {
@@ -65,7 +65,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
       <div className="flex gap-2 pt-2">
         <Input
           className="text-sm"
-          placeholder="New project."
+          placeholder="New project..."
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
         />
