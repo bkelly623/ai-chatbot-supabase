@@ -2,6 +2,7 @@
 
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 import SidebarProjects from '@/components/custom/sidebar-projects';
 import { PlusIcon } from '@/components/custom/icons';
