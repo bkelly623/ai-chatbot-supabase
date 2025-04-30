@@ -29,20 +29,19 @@ export function AppSidebar({ user }: { user: User | null }) {
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex items-center gap-1.5">
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-6 w-6 border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground hover:text-white"
-              onClick={() => {
-                router.push('/');
-                setOpenMobile(false);
-              }}
-            >
-              <PlusIcon size={12} />
-              <span className="sr-only">New chat</span>
-            </Button>
             <BetterTooltip side="bottom" content="New chat">
-              <span className="text-xs text-muted-foreground">New chat</span>
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-6 w-6 border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground hover:text-white"
+                onClick={() => {
+                  router.push('/');
+                  setOpenMobile(false);
+                }}
+              >
+                <PlusIcon size={12} />
+                <span className="sr-only">New chat</span>
+              </Button>
             </BetterTooltip>
           </div>
         </SidebarMenu>
@@ -51,7 +50,7 @@ export function AppSidebar({ user }: { user: User | null }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarHistory user={user} />
-            <SidebarProjects />
+            <SidebarProjects user={user} />
             <SidebarUserNav user={user} />
           </SidebarGroupContent>
         </SidebarGroup>
