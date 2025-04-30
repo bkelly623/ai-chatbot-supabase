@@ -38,7 +38,7 @@ export function AppSidebar({ user }: { user: User | null }) {
                 setOpenMobile(false);
               }}
             >
-              <PlusIcon className="h-3 w-3" />
+              <PlusIcon size={12} />
               <span className="sr-only">New chat</span>
             </Button>
             <BetterTooltip side="bottom" content="New chat">
