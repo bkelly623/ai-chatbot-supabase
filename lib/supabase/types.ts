@@ -18,7 +18,24 @@ export type Database = {
           title: string | null;
           updated_at: string;
           user_id: string;
+        },
+      projects: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          created_at: string;
         };
+        Insert: {
+          user_id: string;
+          name: string;
+        };
+        Update: {
+          user_id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
         Insert: {
           created_at?: string;
           id?: string;
