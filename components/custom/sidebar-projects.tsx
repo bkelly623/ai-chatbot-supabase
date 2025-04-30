@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
 
 interface SidebarProjectsProps {
   user: User | undefined;
@@ -52,7 +52,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
         setNewProjectName('');
       }
     } else {
-      console.warn("User ID is not available. Project creation failed.");
+      console.warn('User ID is not available. Project creation failed.');
     }
   };
 
@@ -86,7 +86,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           onChange={(e) => setNewProjectName(e.target.value)}
         />
         <Button variant="ghost" size="icon" onClick={handleCreateProject}>
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
         </Button>
       </div>
     </div>
