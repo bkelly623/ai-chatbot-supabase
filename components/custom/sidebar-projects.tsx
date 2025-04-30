@@ -1,23 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@supabase/auth-helpers-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 
-export default function SidebarProjects() {
+interface SidebarProjectsProps {
+  user?: {
+    id: string;
+  };
+}
+
+export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [projects, setProjects] = useState<any[]>([]);
   const [newProjectName, setNewProjectName] = useState('');
-  const user = useUser();
   const supabase = createClient();
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchProjects();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchProjects = async () => {
     const { data, error } = await supabase
