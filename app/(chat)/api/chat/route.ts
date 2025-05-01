@@ -10,9 +10,17 @@ import { z } from 'zod';
 
 import { customModel } from '@/ai';
 import { models } from '@/ai/models';
-import { blocksPrompt, regularPrompt, systemPrompt } from '@/ai/prompts';
+import {
+    blocksPrompt,
+    regularPrompt,
+    systemPrompt,
+} from '@/ai/prompts';
 
-import { getChatById, getDocumentById, getSession } from '@/db/cached-queries';
+import {
+    getChatById,
+    getDocumentById,
+    getSession,
+} from '@/db/cached-queries';
 import {
     saveChat,
     saveDocument,
@@ -140,7 +148,12 @@ export async function POST(request: Request) {
             const title = await generateTitleFromUserMessage({
                 message: userMessage,
             });
-            await saveChat({ id, userId: user.id, title, project_id: projectId || null }); // Include project_id
+            await saveChat({
+                id,
+                userId: user.id,
+                title,
+                project_id: projectId || null,
+            }); // Include project_id
         } else if (chat.user_id !== user.id) {
             return new Response('Unauthorized', { status: 401 });
         }
