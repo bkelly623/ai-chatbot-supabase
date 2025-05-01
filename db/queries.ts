@@ -338,3 +338,17 @@ export function handleSupabaseError(error: PostgrestError | null) {
 
   throw error;
 }
+
+export async function getChatsByProjectIdQuery(
+  client: Client,
+  { projectId }: { projectId: string }
+) {
+  const { data: chats, error } = await client
+    .from('chats')
+    .select()
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false }); // Or 'true' for oldest first
+
+  if (error) throw error;
+  return chats;
+}
