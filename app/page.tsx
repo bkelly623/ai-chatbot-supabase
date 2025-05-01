@@ -1,48 +1,21 @@
+'use client';
+
 import React from 'react';
-import { useSearchParams, notFound } from 'next/navigation';
-import { cookies } from 'next/headers'; // Import cookies here
+import { useSearchParams } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { notFound } from 'next/navigation';
 
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
-import { Chat as PreviewChat } from '@/components/custom/chat';
+import { Chat as PreviewChat } from '@/components/custom/chat'; // IMPORTANT: Verify this path!
 import {
   getChatById,
   getMessagesByChatId,
+  getSession,
 } from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '@/components/ProjectLandingPage';
-import { createServerClient } from '@supabase/ssr'; // Import createServerClient here
 
-async function getSupabaseClient() {
-  const cookieStore = cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch (error) {
-            // Ignore error in Server Components
-          }
-        },
-      },
-    }
-  );
-}
-
-async function getCurrentUser() {
-  const supabase = await getSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
-}
-
-export default async function Page() {
+export default function Page() {
   const searchParams = useSearchParams();
   const chatId = searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
@@ -52,27 +25,27 @@ export default async function Page() {
   }
 
   if (!chatId) {
-    return <div>Select a chat from the sidebar, or create a new chat.</div>;
+    return <div>Select a chat from the sidebar, or create a new chat.</div>; // Or a more helpful landing page
   }
 
-  const chat = await getChatById(chatId);
+  const chat = getChatById(chatId);
 
   if (!chat) {
     notFound();
   }
 
-  const user = await getCurrentUser();
+  const user = getSession();
 
   if (!user) {
-    notFound();
+    return notFound();
   }
 
   if (user.id !== chat.user_id) {
-    notFound();
+    return notFound();
   }
 
-  const messagesFromDb = await getMessagesByChatId(chatId);
-  const cookieStore = cookies(); // Access cookies directly
+  const messagesFromDb = getMessagesByChatId(chatId);
+  const cookieStore = cookies();
   const modelIdFromCookie = cookieStore.get('model-id')?.value;
   const selectedModelId =
     models.find((model) => model.id === modelIdFromCookie)?.id ||
