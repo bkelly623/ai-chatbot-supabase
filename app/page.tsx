@@ -1,10 +1,12 @@
+'use client';
+
 import React from 'react';
-import {  useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
-import { Chat as PreviewChat } from '@/components/custom/chat'; // IMPORTANT: Verify this path!
+import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
   getChatById,
   getMessagesByChatId,
@@ -19,11 +21,11 @@ export default async function Page() {
   const projectId = searchParams.get('projectId');
 
   if (projectId) {
-    return <ProjectLandingPage  />;
+    return <ProjectLandingPage />;
   }
 
   if (!chatId) {
-    return <div>Select a chat from the sidebar, or create a new chat.</div>; // Or a more helpful landing page
+    return <div>Select a chat from the sidebar, or create a new chat.</div>;
   }
 
   const chat = await getChatById(chatId);
