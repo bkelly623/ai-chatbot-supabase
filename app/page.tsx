@@ -1,5 +1,3 @@
-'use client';
-
 import { cookies } from 'next/headers';
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { ClientPage } from '@/components/client-page';
