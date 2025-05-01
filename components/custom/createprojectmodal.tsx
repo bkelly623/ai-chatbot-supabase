@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -10,6 +8,9 @@ import {
   AlertDialogTitle,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface CreateProjectModalProps {
   open: boolean;
