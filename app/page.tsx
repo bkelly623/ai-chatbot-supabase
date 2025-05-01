@@ -1,43 +1,87 @@
-'use client';
-
 import React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams, notFound } from 'next/navigation';
+import { cookies } from 'next/headers'; // Import cookies here
 
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
-import ProjectLandingPage from '@/app/ProjectLandingPage'; // Updated path
+import {
+  getChatById,
+  getMessagesByChatId,
+} from '@/db/cached-queries';
+import { convertToUIMessages } from '@/lib/utils';
+import ProjectLandingPage from '@/components/ProjectLandingPage';
+import { createServerClient } from '@supabase/ssr'; // Import createServerClient here
 
-interface ClientPageProps {
-  initialChatId: string | null;
-  initialProjectId: string | null;
-  initialMessages: any[];
-  selectedModelId: string;
-  user: any;
+async function getSupabaseClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Ignore error in Server Components
+          }
+        },
+      },
+    }
+  );
 }
 
-export function ClientPage({
-  initialChatId,
-  initialProjectId,
-  initialMessages,
-  selectedModelId,
-  user,
-}: ClientPageProps) {
-  const router = useRouter();
+async function getCurrentUser() {
+  const supabase = await getSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export default async function Page() {
   const searchParams = useSearchParams();
-  const chatId = initialChatId || searchParams.get('chatId');
-  const projectId = initialProjectId || searchParams.get('projectId');
+  const chatId = searchParams.get('chatId');
+  const projectId = searchParams.get('projectId');
 
   if (projectId) {
-    return <ProjectLandingPage user={user} />;
+    return <ProjectLandingPage />;
   }
 
   if (!chatId) {
     return <div>Select a chat from the sidebar, or create a new chat.</div>;
   }
 
+  const chat = await getChatById(chatId);
+
+  if (!chat) {
+    notFound();
+  }
+
+  const user = await getCurrentUser();
+
+  if (!user) {
+    notFound();
+  }
+
+  if (user.id !== chat.user_id) {
+    notFound();
+  }
+
+  const messagesFromDb = await getMessagesByChatId(chatId);
+  const cookieStore = cookies(); // Access cookies directly
+  const modelIdFromCookie = cookieStore.get('model-id')?.value;
+  const selectedModelId =
+    models.find((model) => model.id === modelIdFromCookie)?.id ||
+    DEFAULT_MODEL_NAME;
+
   return (
     <PreviewChat
-      id={chatId}
-      initialMessages={initialMessages}
+      id={chat.id}
+      initialMessages={convertToUIMessages(messagesFromDb)}
       selectedModelId={selectedModelId}
     />
   );
