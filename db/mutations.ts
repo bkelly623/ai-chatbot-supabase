@@ -27,13 +27,15 @@ export async function saveChat({
   id,
   userId,
   title,
+  project_id, // Add the project_id property
 }: {
   id: string;
   userId: string;
   title: string;
+  project_id?: string | null; // Make it optional (can be string or null)
 }) {
   await mutateQuery(
-    async (client, { id, userId, title }) => {
+    async (client, { id, userId, title, project_id }) => { // Update the parameters here as well
       const now = new Date().toISOString();
       const { error } = await client.from('chats').insert({
         id,
@@ -41,10 +43,11 @@ export async function saveChat({
         title,
         created_at: now,
         updated_at: now,
+        project_id: project_id, // Include project_id in the insert
       });
       if (error) throw error;
     },
-    [{ id, userId, title }],
+    [{ id, userId, title, project_id }], // Update the arguments here
     [`user_${userId}_chats`, `chat_${id}`, 'chats']
   );
 }
