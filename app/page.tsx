@@ -2,25 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
   getChatById,
   getMessagesByChatId,
-  getSession, // Import getSession from '@/db/cached-queries'
+  getSession,
 } from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
-import ProjectLandingPage from '/app/ProjectLandingPage';
-import { DEFAULT_MODEL_NAME, models } from '@/ai/models'; // Import DEFAULT_MODEL_NAME
-import { cookies } from 'next/headers';
+import ProjectLandingPage from '@/components/ProjectLandingPage';
 
-interface PageProps {
-  initialChatId: string | null;
-}
-
-const Page: React.FC<PageProps> = ({ initialChatId }) => {
+const Page: React.FC = () => { // Removed the 'async' keyword
   const searchParams = useSearchParams();
-  const chatId = initialChatId || searchParams.get('chatId');
+  const chatId = searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_NAME);
   const [initialMessages, setInitialMessages] = useState<any[]>([]);
@@ -42,7 +38,7 @@ const Page: React.FC<PageProps> = ({ initialChatId }) => {
       }
 
       try {
-        const userData = await getSession(); // Use getSession from '@/db/cached-queries'
+        const userData = await getSession();
         setUser(userData?.user);
       } catch (error) {
         notFound();
@@ -60,7 +56,7 @@ const Page: React.FC<PageProps> = ({ initialChatId }) => {
   }, [chatId]);
 
   if (projectId) {
-    return <ProjectLandingPage user={user} />;
+    return <ProjectLandingPage />;
   }
 
   if (!chatId) {
@@ -80,9 +76,4 @@ const Page: React.FC<PageProps> = ({ initialChatId }) => {
   );
 };
 
-export default function PageServerWrapper() {
-  const searchParams = useSearchParams();
-  const chatId = searchParams.get('chatId');
-
-  return <Page initialChatId={chatId} />;
-}
+export default Page;
