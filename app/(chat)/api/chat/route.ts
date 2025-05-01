@@ -15,7 +15,6 @@ import {
     regularPrompt,
     systemPrompt,
 } from '@/ai/prompts';
-
 import {
     getChatById,
     getDocumentById,
@@ -28,7 +27,6 @@ import {
     saveSuggestions,
     deleteChatById,
 } from '@/db/mutations';
-
 import { createClient } from '@/lib/supabase/server';
 import { MessageRole } from '@/lib/supabase/types';
 import {
