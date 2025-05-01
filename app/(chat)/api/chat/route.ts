@@ -7,6 +7,7 @@ import {
     streamText,
 } from 'ai';
 import { z } from 'zod';
+
 import { customModel } from '@/ai';
 import { models } from '@/ai/models';
 import {
@@ -14,6 +15,7 @@ import {
     regularPrompt,
     systemPrompt,
 } from '@/ai/prompts';
+
 import {
     getChatById,
     getDocumentById,
@@ -26,6 +28,7 @@ import {
     saveSuggestions,
     deleteChatById,
 } from '@/db/mutations';
+
 import { createClient } from '@/lib/supabase/server';
 import { MessageRole } from '@/lib/supabase/types';
 import {
@@ -33,6 +36,7 @@ import {
     getMostRecentUserMessage,
     sanitizeResponseMessages,
 } from '@/lib/utils';
+
 import { generateTitleFromUserMessage } from '../../actions';
 
 export const maxDuration = 60;
