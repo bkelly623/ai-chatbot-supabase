@@ -22,11 +22,11 @@ import {
     getSession,
 } from '@/db/cached-queries';
 import {
+    deleteChatById,
     saveChat,
     saveDocument,
     saveMessages,
     saveSuggestions,
-    deleteChatById,
 } from '@/db/mutations';
 
 import { createClient } from '@/lib/supabase/server';
