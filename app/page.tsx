@@ -1,7 +1,5 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, notFound } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
@@ -10,28 +8,44 @@ import {
   getSession,
 } from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
-import ProjectLandingPage from '@/components/ProjectLandingPage';
-import { DEFAULT_MODEL_NAME } from '@/ai/models';
+import ProjectLandingPage from '@/app/ProjectLandingPage';
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 
-interface PageProps {
-  initialChatId: string | null;
-  selectedModelId: string;
-}
-
-const Page: React.FC<PageProps> = ({ initialChatId, selectedModelId }) => {
-  const searchParams = useSearchParams();
-  const chatId = initialChatId || searchParams.get('chatId');
-  const projectId = searchParams.get('projectId');
-  const [initialMessages, setInitialMessages] = useState<any[]>([]);
-  const [chat, setChat] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+const Page = () => {
+  const router = useRouter();
+  const { chatId, projectId } = router.query;
+  const [initialMessages, setInitialMessages] = useState([]);
+  const [chat, setChat] = useState(null);
+  const [user, setUser] = useState(null);
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_NAME);
 
   useEffect(() => {
     const loadData = async () => {
-      if (chatId) {
+      // Get model from cookie client-side
+      const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      };
+      
+      const modelIdFromCookie = getCookie('model-id');
+      if (modelIdFromCookie && models.find(model => model.id === modelIdFromCookie)) {
+        setSelectedModelId(modelIdFromCookie);
+      }
+
+      try {
+        const userData = await getSession();
+        setUser(userData?.user);
+      } catch (error) {
+        router.push('/404');
+        return;
+      }
+
+      if (chatId && typeof chatId === 'string') {
         const fetchedChat = await getChatById(chatId);
         if (!fetchedChat) {
-          notFound();
+          router.push('/404');
           return;
         }
         setChat(fetchedChat);
@@ -39,17 +53,10 @@ const Page: React.FC<PageProps> = ({ initialChatId, selectedModelId }) => {
         const messagesFromDb = await getMessagesByChatId(chatId);
         setInitialMessages(convertToUIMessages(messagesFromDb));
       }
-
-      try {
-        const userData = await getSession();
-        setUser(userData?.user);
-      } catch (error) {
-        notFound();
-      }
     };
 
     loadData();
-  }, [chatId]);
+  }, [chatId, router]);
 
   if (projectId) {
     return <ProjectLandingPage user={user} />;
@@ -60,12 +67,13 @@ const Page: React.FC<PageProps> = ({ initialChatId, selectedModelId }) => {
   }
 
   if (!user || !chat || user.id !== chat.user_id) {
-    return notFound();
+    router.push('/404');
+    return <div>Loading...</div>;
   }
 
   return (
     <PreviewChat
-      id={chatId}
+      id={chatId as string}
       initialMessages={initialMessages}
       selectedModelId={selectedModelId}
     />
