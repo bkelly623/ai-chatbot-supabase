@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // We'll remove this
 import { createClient } from '@/lib/supabase/client';
 
 import type { User } from '@supabase/supabase-js';
@@ -20,6 +20,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false); // New state for modal visibility
   const supabase = createClient();
   const router = useRouter();
 
@@ -75,7 +76,6 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           user_id: user.id,
           name: newProjectName
         }]).select();
-
         if (error) {
           setError(error.message);
         } else if (data?.length) {
@@ -99,7 +99,12 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
 
   return (
     <div className="p-2 space-y-2">
-      <h2 className="text-sm font-semibold text-muted-foreground">Projects</h2>
+      <h2 className="text-sm font-semibold text-muted-foreground flex items-center justify-between">
+        Projects
+        <Button variant="ghost" size="sm" onClick={() => setShowCreateProjectModal(true)}>
+          + New Project
+        </Button>
+      </h2>
 
       {loading && <div className="animate-pulse bg-muted/50 h-8 w-full rounded-md">
           {/* Placeholder while loading */}
@@ -119,6 +124,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
         ))}
       </div>
 
+      {/* We'll remove this entire div
       <div className="flex gap-2 pt-2">
         <Input
           className="text-sm"
@@ -133,6 +139,7 @@ export default function SidebarProjects({ user }: SidebarProjectsProps) {
           {loading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <Plus className="size-4" />}
         </Button>
       </div>
+      */}
     </div>
   );
 }
