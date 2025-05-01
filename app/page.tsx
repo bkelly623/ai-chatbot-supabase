@@ -7,16 +7,19 @@ import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
   getChatById,
   getMessagesByChatId,
-  getSession,
 } from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '/app/ProjectLandingPage';
 
-interface PageProps {
-  initialSelectedModelId: string;
+import { supabase } from '@/lib/supabase/client'; // Import the client-side Supabase client
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
+
+async function getSessionClientSide() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
 }
 
-const Page: React.FC<PageProps> = ({ initialSelectedModelId }) => {
+export default async function Page() {
   const searchParams = useSearchParams();
   const chatId = searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
@@ -29,13 +32,13 @@ const Page: React.FC<PageProps> = ({ initialSelectedModelId }) => {
     return <div>Select a chat from the sidebar, or create a new chat.</div>;
   }
 
-  const chat = getChatById(chatId);
+  const chat = await getChatById(chatId);
 
   if (!chat) {
     notFound();
   }
 
-  const user = getSession();
+  const user = await getSessionClientSide(); // Use the client-side session retrieval
 
   if (!user) {
     return notFound();
@@ -45,30 +48,36 @@ const Page: React.FC<PageProps> = ({ initialSelectedModelId }) => {
     return notFound();
   }
 
-  const messagesFromDb = getMessagesByChatId(chatId);
+  const messagesFromDb = await getMessagesByChatId(chatId);
+  // We need to fetch modelId server-side and pass it as a prop
+  return <ModelIdFetcher chatId={chatId} initialMessages={convertToUIMessages(messagesFromDb)} />;
+}
+
+interface ModelIdFetcherProps {
+  chatId: string;
+  initialMessages: any[];
+}
+
+const ModelIdFetcher: React.FC<ModelIdFetcherProps> = ({ chatId, initialMessages }) => {
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_NAME);
+
+  useEffect(() => {
+    const fetchInitialModelId = async () => {
+      const response = await fetch('/api/get-model-id');
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedModelId(data.modelId);
+      }
+    };
+
+    fetchInitialModelId();
+  }, []);
 
   return (
     <PreviewChat
-      id={chat.id}
-      initialMessages={convertToUIMessages(messagesFromDb)}
-      selectedModelId={initialSelectedModelId}
+      id={chatId}
+      initialMessages={initialMessages}
+      selectedModelId={selectedModelId}
     />
   );
 };
-
-async function getInitialModelId() {
-  const { cookies } = await import('next/headers');
-  const { DEFAULT_MODEL_NAME, models } = await import('@/ai/models');
-  const cookieStore = cookies();
-  const modelIdFromCookie = cookieStore.get('model-id')?.value;
-  return (
-    models.find((model) => model.id === modelIdFromCookie)?.id ||
-    DEFAULT_MODEL_NAME
-  );
-}
-
-export default async function PageServerWrapper() {
-  const initialSelectedModelId = await getInitialModelId();
-
-  return <Page initialSelectedModelId={initialSelectedModelId} />;
-}
