@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 
@@ -16,173 +14,113 @@ import {
   getSessionQuery,
   getUserByIdQuery,
   getChatWithMessagesQuery,
+  getChatsByProjectIdQuery,
 } from '@/db/queries';
 
 const getSupabase = cache(() => createClient());
 
 export const getSession = async () => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getSessionQuery(supabase);
-    },
-    ['session'],
-    {
-      tags: [`session`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
-};
-
-export const getUserById = async (id: string) => {
-  const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getUserByIdQuery(supabase, id);
-    },
-    [`user_by_id`, id.slice(2, 12)],
-    {
-      tags: [`user_by_id_${id.slice(2, 12)}`],
-
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getSessionQuery, ['session'], {
+    tags: ['session'],
+    revalidate: 5,
+  })();
 };
 
 export const getUser = async (email: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getUserQuery(supabase, email);
-    },
-    ['user', email],
-    {
-      tags: [`user_${email}`],
-      revalidate: 3600, // Cache for 1 hour
-    }
-  )();
+  return unstable_cache(getUserQuery, ['user', email], {
+    tags: ['user'],
+    revalidate: 60,
+  })(supabase, email);
 };
 
-export const getChatById = async (chatId: string) => {
+export const getUserById = async (id: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getChatByIdQuery(supabase, { id: chatId });
-    },
-    ['chat', chatId],
-    {
-      tags: [`chat_${chatId}`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getUserByIdQuery, ['user_by_id', id], {
+    tags: ['user_by_id'],
+    revalidate: 60,
+  })(supabase, id);
 };
 
-export const getChatsByUserId = async (userId: string) => {
+export const getChatById = async (id: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getChatsByUserIdQuery(supabase, { id: userId });
-    },
-    ['chats', userId],
-    {
-      tags: [`user_${userId}_chats`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getChatByIdQuery, ['chat', id], {
+    tags: ['chat'],
+    revalidate: 5,
+  })(supabase, { id });
 };
 
-export const getMessagesByChatId = async (chatId: string) => {
+export const getChatWithMessages = async (id: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getMessagesByChatIdQuery(supabase, { id: chatId });
-    },
-    ['messages', chatId],
-    {
-      tags: [`chat_${chatId}_messages`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getChatWithMessagesQuery, ['chat_with_messages', id], {
+    tags: ['chat', 'messages'],
+    revalidate: 5,
+  })(supabase, { id });
 };
 
-export const getVotesByChatId = async (chatId: string) => {
+export const getMessagesByChatId = async (id: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getVotesByChatIdQuery(supabase, { id: chatId });
-    },
-    ['votes', chatId],
-    {
-      tags: [`chat_${chatId}_votes`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getMessagesByChatIdQuery, ['messages', id], {
+    tags: ['messages'],
+    revalidate: 5,
+  })(supabase, { id });
 };
 
-export const getDocumentById = async (documentId: string) => {
+export const getChatsByUserId = async (id: string) => {
   const supabase = await getSupabase();
-
-  return unstable_cache(
-    async () => {
-      return getDocumentByIdQuery(supabase, { id: documentId });
-    },
-    ['document', documentId],
-    {
-      tags: [`document_${documentId}`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+  return unstable_cache(getChatsByUserIdQuery, ['chats', id], {
+    tags: ['chats'],
+    revalidate: 5,
+  })(supabase, { id });
 };
 
-export const getDocumentsById = async (documentId: string) => {
+export const getVotesByChatId = async (id: string) => {
   const supabase = await getSupabase();
+  return unstable_cache(getVotesByChatIdQuery, ['votes', id], {
+    tags: ['votes'],
+    revalidate: 5,
+  })(supabase, { id });
+};
 
-  return unstable_cache(
-    async () => {
-      return getDocumentsByIdQuery(supabase, { id: documentId });
-    },
-    ['documents', documentId],
-    {
-      tags: [`document_${documentId}_versions`],
-      revalidate: 10, // Cache for 10 seconds
-    }
-  )();
+export const getDocumentById = async (id: string) => {
+  const supabase = await getSupabase();
+  return unstable_cache(getDocumentByIdQuery, ['document', id], {
+    tags: ['document'],
+    revalidate: 5,
+  })(supabase, { id });
+};
+
+export const getDocumentsById = async (id: string) => {
+  const supabase = await getSupabase();
+  return unstable_cache(getDocumentsByIdQuery, ['documents', id], {
+    tags: ['documents'],
+    revalidate: 5,
+  })(supabase, { id });
 };
 
 export const getSuggestionsByDocumentId = async (documentId: string) => {
   const supabase = await getSupabase();
-
   return unstable_cache(
-    async () => {
-      return getSuggestionsByDocumentIdQuery(supabase, {
-        documentId: documentId,
-      });
-    },
+    getSuggestionsByDocumentIdQuery,
     ['suggestions', documentId],
     {
-      tags: [`document_${documentId}_suggestions`],
-      revalidate: 10, // Cache for 10 seconds
+      tags: ['suggestions'],
+      revalidate: 5,
     }
-  )();
+  )(supabase, { documentId });
 };
 
-export const getChatWithMessages = async (chatId: string) => {
+export const getChatsByProjectId = async (projectId: string) => {
   const supabase = await getSupabase();
 
   return unstable_cache(
     async () => {
-      return getChatWithMessagesQuery(supabase, { id: chatId });
+      return getChatsByProjectIdQuery(supabase, { projectId });
     },
-    ['chat_with_messages', chatId],
+    ['chats_by_project', projectId],
     {
-      tags: [`chat_${chatId}`, `chat_${chatId}_messages`],
+      tags: [`project_${projectId}_chats`],
       revalidate: 10, // Cache for 10 seconds
     }
   )();
