@@ -2,9 +2,11 @@
 
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
+import SidebarProjects from '@/components/custom/sidebar-projects';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,13 @@ import { BetterTooltip } from '@/components/ui/tooltip';
 export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
+
+  // Function to safely convert User | null to User | undefined
+  const getSafeUser = (): User | undefined => {
+    return user === null ? undefined : user;
+  };
+
+  const safeUser = getSafeUser();
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -58,7 +67,12 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarHistory user={user ?? undefined} />
+          <SidebarGroupContent>
+            <SidebarProjects user={safeUser} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarHistory user={safeUser} />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="gap-0">

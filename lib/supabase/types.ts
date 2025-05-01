@@ -43,6 +43,23 @@ export type Database = {
           },
         ];
       };
+      projects: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          name: string;
+        };
+        Update: {
+          user_id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
       documents: {
         Row: {
           content: string | null;
