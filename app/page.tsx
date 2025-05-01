@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 
-import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
   getChatById,
@@ -13,12 +11,17 @@ import {
 } from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '@/components/ProjectLandingPage';
+import { DEFAULT_MODEL_NAME } from '@/ai/models';
 
-const Page: React.FC = () => { // Removed the 'async' keyword
+interface PageProps {
+  initialChatId: string | null;
+  initialSelectedModelId: string;
+}
+
+const Page: React.FC<PageProps> = ({ initialChatId, initialSelectedModelId }) => {
   const searchParams = useSearchParams();
-  const chatId = searchParams.get('chatId');
+  const chatId = initialChatId || searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
-  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_NAME);
   const [initialMessages, setInitialMessages] = useState<any[]>([]);
   const [chat, setChat] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -43,20 +46,13 @@ const Page: React.FC = () => { // Removed the 'async' keyword
       } catch (error) {
         notFound();
       }
-
-      const cookieStore = cookies();
-      const modelIdFromCookie = cookieStore.get('model-id')?.value;
-      setSelectedModelId(
-        models.find((model) => model.id === modelIdFromCookie)?.id ||
-          DEFAULT_MODEL_NAME
-      );
     };
 
     loadData();
   }, [chatId]);
 
   if (projectId) {
-    return <ProjectLandingPage />;
+    return <ProjectLandingPage user={user} />;
   }
 
   if (!chatId) {
@@ -71,9 +67,26 @@ const Page: React.FC = () => { // Removed the 'async' keyword
     <PreviewChat
       id={chatId}
       initialMessages={initialMessages}
-      selectedModelId={selectedModelId}
+      selectedModelId={initialSelectedModelId}
     />
   );
 };
 
-export default Page;
+async function getInitialModelId() {
+  const { cookies } = await import('next/headers');
+  const { DEFAULT_MODEL_NAME, models } = await import('@/ai/models');
+  const cookieStore = cookies();
+  const modelIdFromCookie = cookieStore.get('model-id')?.value;
+  return (
+    models.find((model) => model.id === modelIdFromCookie)?.id ||
+    DEFAULT_MODEL_NAME
+  );
+}
+
+export default async function PageServerWrapper() {
+  const searchParams = useSearchParams();
+  const chatId = searchParams.get('chatId');
+  const initialSelectedModelId = await getInitialModelId();
+
+  return <Page initialChatId={chatId} initialSelectedModelId={initialSelectedModelId} />;
+}
