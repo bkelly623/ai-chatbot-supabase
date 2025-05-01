@@ -1,8 +1,10 @@
+'use client'; // Mark the Client Component
+
 import React from 'react';
-import { useSearchParams, notFound } from 'next/navigation';
+import { useSearchParams, notFound, useRouter } from 'next/navigation';
 import { cookies } from 'next/headers';
 
-import { DEFAULT_MODEL_NAME, models } from '@/ai/models'; // Single import
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
 import {
   getChatById,
@@ -12,36 +14,26 @@ import {
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '@/components/ProjectLandingPage';
 
-// Server Component to fetch user session
-async function GetUser() {
-  const { getSession } = await import('@/db/cached-queries');
-  return await getSession();
-}
-
-// Server Component to fetch chat data
-async function GetChatData(chatId: string) {
-  const { getChatById, getMessagesByChatId } = await import('@/db/cached-queries');
-  const chat = await getChatById(chatId);
-  const messagesFromDb = await getMessagesByChatId(chatId);
-  return { chat, messagesFromDb };
-}
-
-// Client Component
 interface PageProps {
-  chatId: string | null;
-  projectId: string | null;
+  initialChatId: string | null;
+  initialProjectId: string | null;
   initialMessages: any[];
   selectedModelId: string;
   user: any;
 }
 
 const Page: React.FC<PageProps> = ({
-  chatId,
-  projectId,
+  initialChatId,
+  initialProjectId,
   initialMessages,
   selectedModelId,
   user,
 }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const chatId = initialChatId || searchParams.get('chatId');
+  const projectId = initialProjectId || searchParams.get('projectId');
+
   if (projectId) {
     return <ProjectLandingPage user={user} />;
   }
@@ -59,23 +51,23 @@ const Page: React.FC<PageProps> = ({
   );
 };
 
-// Server Component to orchestrate data fetching and rendering
-export default async function PageServerWrapper() {
+// Server Component to fetch initial data
+async function PageServerWrapper() {
   const searchParams = useSearchParams();
   const chatId = searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
 
-  const user = await GetUser();
+  const user = await getSession();
 
   if (!user && !projectId) {
     return notFound();
   }
 
   let initialMessages = [];
-  let selectedModelId = DEFAULT_MODEL_NAME; // Using the imported constant
+  let selectedModelId = DEFAULT_MODEL_NAME;
 
   if (chatId) {
-    const { chat, messagesFromDb } = await GetChatData(chatId);
+    const { chat, messagesFromDb } = await getChatById(chatId);
 
     if (!chat || (user && user.id !== chat.user_id)) {
       return notFound();
@@ -83,26 +75,28 @@ export default async function PageServerWrapper() {
 
     initialMessages = convertToUIMessages(messagesFromDb);
 
-    const { cookies } = await import('next/headers');
-    const modelIdFromCookie = cookies().get('model-id')?.value;
+    const cookieStore = cookies();
+    const modelIdFromCookie = cookieStore.get('model-id')?.value;
     selectedModelId =
       models.find((model) => model.id === modelIdFromCookie)?.id ||
-      DEFAULT_MODEL_NAME; // Using the imported constant
+      DEFAULT_MODEL_NAME;
   } else {
-    const { cookies } = await import('next/headers');
-    const modelIdFromCookie = cookies().get('model-id')?.value;
+    const cookieStore = cookies();
+    const modelIdFromCookie = cookieStore.get('model-id')?.value;
     selectedModelId =
       models.find((model) => model.id === modelIdFromCookie)?.id ||
-      DEFAULT_MODEL_NAME; // Using the imported constant
+      DEFAULT_MODEL_NAME;
   }
 
   return (
     <Page
-      chatId={chatId}
-      projectId={projectId}
+      initialChatId={chatId}
+      initialProjectId={projectId}
       initialMessages={initialMessages}
       selectedModelId={selectedModelId}
       user={user}
     />
   );
 }
+
+export default PageServerWrapper;
