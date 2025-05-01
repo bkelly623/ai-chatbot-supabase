@@ -8,12 +8,13 @@ import { Chat as PreviewChat } from '@/components/custom/chat'; // IMPORTANT: Ve
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client'; // Import createClient
+import { User } from '@supabase/supabase-js'; // Import User type
 
 interface ProjectLandingPageProps {
-  //projectId: string;  // You might get this from URL params
+  user: User | null; // Expecting user prop
 }
 
-const ProjectLandingPage: React.FC<ProjectLandingPageProps> = () => {
+const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
   const [chats, setChats] = useState<any[]>([]); // Replace 'any' with your Chat type
   const [projectName, setProjectName] = useState<string | undefined>("");
   const [newChatName, setNewChatName] = useState<string>("");
@@ -75,7 +76,7 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = () => {
 
 
   const handleCreateChat = async () => {
-    if (!newChatName.trim() || !projectId) return;
+    if (!newChatName.trim() || !projectId || !user?.id) return; // Ensure user?.id exists
 
     setLoading(true);
     setError(null);
@@ -84,7 +85,7 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = () => {
       const supabase = createClient();
       const { data: newChat, error: chatError } = await supabase
         .from('chats')
-        .insert([{ project_id: projectId, title: newChatName, user_id: /* Get user ID here */  }]) // You'll need to get the current user's ID
+        .insert([{ project_id: projectId, title: newChatName, user_id: user.id }])
         .select()
         .single();
 
