@@ -21,10 +21,14 @@ const getSupabase = cache(() => createClient());
 
 export const getSession = async () => {
   const supabase = await getSupabase();
-  return unstable_cache(getSessionQuery, ['session'], {
-    tags: ['session'],
-    revalidate: 5,
-  })();
+  return unstable_cache(
+    () => getSessionQuery(supabase),
+    ['session'],
+    {
+      tags: ['session'],
+      revalidate: 5,
+    }
+  )();
 };
 
 export const getUser = async (email: string) => {
