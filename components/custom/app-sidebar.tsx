@@ -67,12 +67,12 @@ export function AppSidebar({ user }: { user: User | null }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarHistory user={safeUser} />
-        </SidebarGroup>
-        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarProjects user={safeUser} />
           </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarHistory user={safeUser} />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="gap-0">
