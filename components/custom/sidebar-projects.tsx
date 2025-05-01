@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
-import { CreateProjectModal } from '@/components/custom/createprojectmodal'; // Import the modal
+import CreateProjectModal from '@/components/custom/createprojectmodal'; // Corrected import
 
 import type { User } from '@supabase/supabase-js';
 
