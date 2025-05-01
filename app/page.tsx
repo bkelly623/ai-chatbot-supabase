@@ -1,56 +1,44 @@
-import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+'use client';
 
-import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
-import { ClientPage } from '@/components/client-page';
-import {
-  getChatById,
-  getMessagesByChatId,
-  getSession,
-} from '@/db/cached-queries';
-import { convertToUIMessages } from '@/lib/utils';
+import React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default async function Page({ searchParams }: { searchParams: { chatId?: string; projectId?: string } }) {
-  const chatId = searchParams.chatId || null;
-  const projectId = searchParams.projectId || null;
+import { Chat as PreviewChat } from '@/components/custom/chat';
+import ProjectLandingPage from '@/app/ProjectLandingPage'; // Updated path
 
-  const user = await getSession();
+interface ClientPageProps {
+  initialChatId: string | null;
+  initialProjectId: string | null;
+  initialMessages: any[];
+  selectedModelId: string;
+  user: any;
+}
 
-  if (!user && !projectId) {
-    return notFound();
+export function ClientPage({
+  initialChatId,
+  initialProjectId,
+  initialMessages,
+  selectedModelId,
+  user,
+}: ClientPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const chatId = initialChatId || searchParams.get('chatId');
+  const projectId = initialProjectId || searchParams.get('projectId');
+
+  if (projectId) {
+    return <ProjectLandingPage user={user} />;
   }
 
-  let initialMessages = [];
-  let selectedModelId = DEFAULT_MODEL_NAME;
-
-  if (chatId) {
-    const chat = await getChatById(chatId);
-
-    if (!chat || (user && user.id !== chat.user_id)) {
-      return notFound();
-    }
-
-    const messagesFromDb = await getMessagesByChatId(chatId);
-    initialMessages = convertToUIMessages(messagesFromDb);
-
-    const modelIdFromCookie = cookies().get('model-id')?.value;
-    selectedModelId =
-      models.find((model) => model.id === modelIdFromCookie)?.id ||
-      DEFAULT_MODEL_NAME;
-  } else {
-    const modelIdFromCookie = cookies().get('model-id')?.value;
-    selectedModelId =
-      models.find((model) => model.id === modelIdFromCookie)?.id ||
-      DEFAULT_MODEL_NAME;
+  if (!chatId) {
+    return <div>Select a chat from the sidebar, or create a new chat.</div>;
   }
 
   return (
-    <ClientPage
-      initialChatId={chatId}
-      initialProjectId={projectId}
+    <PreviewChat
+      id={chatId}
       initialMessages={initialMessages}
       selectedModelId={selectedModelId}
-      user={user}
     />
   );
 }
