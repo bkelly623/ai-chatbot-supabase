@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Chat as PreviewChat } from '@/components/custom/chat';
-import ProjectLandingPage from '@/components/ProjectLandingPage';
+import ProjectLandingPage from '@/app/ProjectLandingPage';
 
 interface ClientPageProps {
   initialChatId: string | null;
