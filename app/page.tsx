@@ -1,16 +1,10 @@
-'use client'; // Mark the Client Component
+'use client';
 
 import React from 'react';
 import { useSearchParams, notFound, useRouter } from 'next/navigation';
-import { cookies } from 'next/headers';
 
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
-import {
-  getChatById,
-  getMessagesByChatId,
-  getSession,
-} from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '@/components/ProjectLandingPage';
 
@@ -57,6 +51,7 @@ async function PageServerWrapper() {
   const chatId = searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
 
+  const { getSession } = await import('@/db/cached-queries');
   const user = await getSession();
 
   if (!user && !projectId) {
@@ -67,22 +62,24 @@ async function PageServerWrapper() {
   let selectedModelId = DEFAULT_MODEL_NAME;
 
   if (chatId) {
-    const { chat, messagesFromDb } = await getChatById(chatId);
+    const { getChatById, getMessagesByChatId } = await import('@/db/cached-queries');
+    const chat = await getChatById(chatId);
 
     if (!chat || (user && user.id !== chat.user_id)) {
       return notFound();
     }
 
+    const messagesFromDb = await getMessagesByChatId(chatId);
     initialMessages = convertToUIMessages(messagesFromDb);
 
-    const cookieStore = cookies();
-    const modelIdFromCookie = cookieStore.get('model-id')?.value;
+    const { cookies } = await import('next/headers');
+    const modelIdFromCookie = cookies().get('model-id')?.value;
     selectedModelId =
       models.find((model) => model.id === modelIdFromCookie)?.id ||
       DEFAULT_MODEL_NAME;
   } else {
-    const cookieStore = cookies();
-    const modelIdFromCookie = cookieStore.get('model-id')?.value;
+    const { cookies } = await import('next/headers');
+    const modelIdFromCookie = cookies().get('model-id')?.value;
     selectedModelId =
       models.find((model) => model.id === modelIdFromCookie)?.id ||
       DEFAULT_MODEL_NAME;
@@ -100,3 +97,15 @@ async function PageServerWrapper() {
 }
 
 export default PageServerWrapper;
+
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
+import { convertToUIMessages } from '@/lib/utils';
+import ProjectLandingPage from '@/components/ProjectLandingPage';
+import React from 'react';
+import { useSearchParams, notFound, useRouter } from 'next/navigation';
+import { cookies } from 'next/headers';
+import {
+  getChatById,
+  getMessagesByChatId,
+  getSession,
+} from '@/db/cached-queries';
