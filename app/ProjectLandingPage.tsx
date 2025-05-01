@@ -4,19 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 
-import { Chat as PreviewChat } from '@/components/custom/chat';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Chat as PreviewChat } from '@/components/custom/chat';
 
 import { getChatsByProjectId } from '@/db/cached-queries';
 import { createClient } from '@/lib/supabase/client';
 
 interface ProjectLandingPageProps {
-  user: User | null; // Expecting user prop
+  user: User | null;
 }
 
 const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
-  const [chats, setChats] = useState<any[]>([]); // Replace 'any' with your Chat type
+  const [chats, setChats] = useState<any[]>([]);
   const [projectName, setProjectName] = useState<string | undefined>("");
   const [newChatName, setNewChatName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,9 +75,8 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
     }
   };
 
-
   const handleCreateChat = async () => {
-    if (!newChatName.trim() || !projectId || !user?.id) return; // Ensure user?.id exists
+    if (!newChatName.trim() || !projectId || !user?.id) return;
 
     setLoading(true);
     setError(null);
@@ -95,7 +94,7 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
       } else if (newChat) {
         setChats(prevChats => [...prevChats, newChat]);
         setNewChatName("");
-        router.push(`/?chatId=${newChat.id}`); // Navigate to the new chat
+        router.push(`/?chatId=${newChat.id}`);
       }
     } catch (error: any) {
       setError(error.message || "Error creating new chat.");
@@ -104,14 +103,12 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
     }
   };
 
-
   return (
     <div className="container mx-auto py-6">
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-500">{error}</div>}
 
       {projectName && <h1 className="text-2xl font-bold mb-4">Project: {projectName}</h1>}
-
 
       <div className="mb-4">
         <div className="flex items-center space-x-2">
@@ -137,7 +134,6 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
           >
             <h2 className="text-lg font-semibold">{chat.title || `Chat ${chat.id}`}</h2>
             <p className="text-gray-500 text-sm">Created at: {chat.created_at}</p>
-            {/* You might want to display a snippet of the last message here */}
           </div>
         ))}
       </div>
