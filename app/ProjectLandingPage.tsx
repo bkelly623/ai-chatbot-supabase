@@ -121,7 +121,7 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
             onChange={(e) => setNewChatName(e.target.value)}
             className="flex-1"
           />
-          <Button onClick={handleCreateChat} variant="primary">
+          <Button onClick={handleCreateChat} variant="default">
             New Chat
           </Button>
         </div>
