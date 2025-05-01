@@ -15,10 +15,10 @@ import { DEFAULT_MODEL_NAME } from '@/ai/models';
 
 interface PageProps {
   initialChatId: string | null;
-  initialSelectedModelId: string;
+  selectedModelId: string;
 }
 
-const Page: React.FC<PageProps> = ({ initialChatId, initialSelectedModelId }) => {
+const Page: React.FC<PageProps> = ({ initialChatId, selectedModelId }) => {
   const searchParams = useSearchParams();
   const chatId = initialChatId || searchParams.get('chatId');
   const projectId = searchParams.get('projectId');
@@ -67,26 +67,9 @@ const Page: React.FC<PageProps> = ({ initialChatId, initialSelectedModelId }) =>
     <PreviewChat
       id={chatId}
       initialMessages={initialMessages}
-      selectedModelId={initialSelectedModelId}
+      selectedModelId={selectedModelId}
     />
   );
 };
 
-async function getInitialModelId() {
-  const { cookies } = await import('next/headers');
-  const { DEFAULT_MODEL_NAME, models } = await import('@/ai/models');
-  const cookieStore = cookies();
-  const modelIdFromCookie = cookieStore.get('model-id')?.value;
-  return (
-    models.find((model) => model.id === modelIdFromCookie)?.id ||
-    DEFAULT_MODEL_NAME
-  );
-}
-
-export default async function PageServerWrapper() {
-  const searchParams = useSearchParams();
-  const chatId = searchParams.get('chatId');
-  const initialSelectedModelId = await getInitialModelId();
-
-  return <Page initialChatId={chatId} initialSelectedModelId={initialSelectedModelId} />;
-}
+export default Page;
