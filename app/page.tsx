@@ -1,21 +1,25 @@
 'use client';
 
 import React from 'react';
-import { useSearchParams } from 'next/navigation';
-import { notFound } from 'next/navigation';
+import { useSearchParams, notFound } from 'next/navigation'; // Corrected import
+import { cookies } from 'next/headers';
 
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
+import {
+  getChatById,
+  getMessagesByChatId,
+  getSession,
+} from '@/db/cached-queries';
 import { convertToUIMessages } from '@/lib/utils';
 import ProjectLandingPage from '@/components/ProjectLandingPage';
 
-// Client Component
 interface PageProps {
   chatId: string | null;
   projectId: string | null;
-  initialMessages: any[]; // Replace 'any' with your Message type
+  initialMessages: any[];
   selectedModelId: string;
-  user: any; // Replace 'any' with your User type
+  user: any;
 }
 
 const Page: React.FC<PageProps> = ({
@@ -42,7 +46,6 @@ const Page: React.FC<PageProps> = ({
   );
 };
 
-// Server Component (this needs to be in the same file or a parent)
 export default async function PageServerWrapper() {
   const searchParams = useSearchParams();
   const chatId = searchParams.get('chatId');
@@ -84,14 +87,13 @@ export default async function PageServerWrapper() {
   );
 }
 
-// Import necessary functions (getSession, getChatById, getMessagesByChatId)
 import {
   getChatById,
   getMessagesByChatId,
   getSession,
 } from '@/db/cached-queries';
 import { cookies } from 'next/headers';
-import { notFound, useSearchParams } from 'next/navigation';
+import { useSearchParams, notFound } from 'next/navigation'; // Removed duplicate 'notFound'
 import React from 'react';
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import { Chat as PreviewChat } from '@/components/custom/chat';
