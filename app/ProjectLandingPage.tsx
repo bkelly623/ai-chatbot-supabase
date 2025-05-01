@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { User } from '@supabase/supabase-js'; // External library
 
-import { getChatsByProjectId } from '@/db/cached-queries';
-import { Chat as PreviewChat } from '@/components/custom/chat'; // IMPORTANT: Verify this path!
+import { Chat as PreviewChat } from '@/components/custom/chat'; // Internal components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client'; // Import createClient
-import { User } from '@supabase/supabase-js'; // Import User type
+
+import { getChatsByProjectId } from '@/db/cached-queries'; // Internal data fetching
+import { createClient } from '@/lib/supabase/client'; // Internal utility
 
 interface ProjectLandingPageProps {
   user: User | null; // Expecting user prop
