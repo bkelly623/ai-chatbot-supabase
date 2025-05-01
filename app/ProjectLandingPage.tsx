@@ -8,7 +8,7 @@ import { Chat as PreviewChat } from '@/components/custom/chat';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getChatsByProjectId } from '@/db/cached-queries';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client'; // Import the client-side Supabase client
 
 interface ProjectLandingPageProps {
   user: User | null;
@@ -27,7 +27,6 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
   useEffect(() => {
     if (projectId) {
       fetchChats(projectId);
-      fetchProjectName(projectId);
     }
   }, [projectId]);
 
@@ -35,78 +34,37 @@ const ProjectLandingPage: React.FC<ProjectLandingPageProps> = ({ user }) => {
     setLoading(true);
     setError(null);
     try {
-      const fetchedChats = await getChatsByProjectId(projectId);
-      if (fetchedChats) {
-        setChats(fetchedChats);
-      } else {
-        setError("Failed to fetch chats for this project.");
-      }
+      const chatsData = await getChatsByProjectId(projectId);
+      setChats(chatsData || []);
+      // Optionally fetch project name if needed
     } catch (err: any) {
-      setError(err.message || "An error occurred while fetching chats.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProjectName = async (projectId: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('projects')
-        .select('name')
-        .eq('id', projectId)
-        .single();
-
-      if (error) {
-        setError(error.message);
-      } else if (data) {
-        setProjectName(data.name);
-      } else {
-        setError("Project not found.");
-      }
-    } catch (error: any) {
-      setError(error.message || "An error occurred while fetching project details.");
+      setError(err.message || 'Failed to fetch chats');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateChat = async () => {
-    if (!newChatName.trim() || !projectId || !user?.id) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      const { data: newChat, error: chatError } = await supabase
+    if (newChatName && projectId && user?.id) {
+      const { data: chat, error } = await supabase
         .from('chats')
-        .insert([{ project_id: projectId, title: newChatName, user_id: user.id }])
-        .select()
+        .insert([{ title: newChatName, user_id: user.id, project_id: projectId }])
         .single();
 
-      if (chatError) {
-        setError(chatError.message);
-      } else if (newChat) {
-        setChats(prevChats => [...prevChats, newChat]);
-        setNewChatName("");
-        router.push(`/?chatId=${newChat.id}`);
+      if (error) {
+        console.error('Error creating chat:', error);
+        // Handle error
+      } else if (chat?.id) {
+        router.push(`/?chatId=${chat.id}`);
       }
-    } catch (error: any) {
-      setError(error.message || "Error creating new chat.");
-    } finally {
-      setLoading(false);
+      setNewChatName('');
     }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-500">{error}</div>}
-
+    <div>
+      {loading && <p>Loading chats...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
       {projectName && <h1 className="text-2xl font-bold mb-4">Project: {projectName}</h1>}
 
       <div className="mb-4">
