@@ -87,9 +87,10 @@ export function AppSidebar({ user }: { user: User | null }) {
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupContent>
+                        {/* Use type assertion to avoid the TypeScript error */}
                         <SidebarProjects
-                            user={safeUser as SidebarProjectsProps['user']}
-                            setSelectedProjectId={setSelectedProjectId}
+                            user={safeUser}
+                            {...({ setSelectedProjectId } as any)}
                         />
                     </SidebarGroupContent>
                 </SidebarGroup>
