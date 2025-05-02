@@ -2,13 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     // Verify the user is authenticated
     const supabase = await createClient();
@@ -20,7 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get the project ID from the URL params
-    const projectId = params.id;
+    const projectId = context.params.id;
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
