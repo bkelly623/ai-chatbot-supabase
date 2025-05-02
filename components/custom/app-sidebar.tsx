@@ -4,10 +4,11 @@ import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
-import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects'; // Import the component AND its props
+import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
+import CreateProjectModal from '@/components/custom/createprojectmodal';  //  ✅  Moved BEFORE icons
+import { PlusIcon } from '@/components/custom/icons';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -20,7 +21,6 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
-import CreateProjectModal from '@/components/custom/createprojectmodal';
 
 export function AppSidebar({ user }: { user: User | null }) {
   const router = useRouter();
@@ -69,7 +69,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarProjects user={safeUser as SidebarProjectsProps['user']} /> {/* Forceful type assertion */}
+            <SidebarProjects user={safeUser as SidebarProjectsProps['user']} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
