@@ -69,7 +69,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarProjects user={safeUser} />  {/* ✅  Call SidebarProjects directly */}
+            <SidebarProjects user={safeUser} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
