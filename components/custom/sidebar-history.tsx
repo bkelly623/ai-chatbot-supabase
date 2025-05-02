@@ -8,7 +8,14 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import useSWR from 'swr';
 
-import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
+import { updateChatProjectId } from '@/app/(chat)/actions';
+import { 
+  CheckIcon, 
+  FolderIcon, 
+  LoaderIcon, 
+  MoreHorizontalIcon, 
+  TrashIcon 
+} from '@/components/custom/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +30,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -36,10 +45,9 @@ import {
 } from '@/components/ui/sidebar';
 import { getChatsByUserIdQuery } from '@/db/queries';
 import { createClient } from '@/lib/supabase/client';
-import { Database } from '@/lib/supabase/types';
+import { Chat, Database } from '@/lib/supabase/types';
 
-type Chat = Database['public']['Tables']['chats']['Row'];
-
+type Project = Database['public']['Tables']['projects']['Row'];
 type GroupedChats = {
   today: Chat[];
   yesterday: Chat[];
@@ -84,40 +92,181 @@ const ChatItem = ({
   isActive,
   onDelete,
   setOpenMobile,
+  userId,
 }: {
   chat: Chat;
   isActive: boolean;
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
-}) => (
-  <SidebarMenuItem>
-    <SidebarMenuButton asChild isActive={isActive}>
-      <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-        <span>{chat.title || 'New Chat'}</span>
-      </Link>
-    </SidebarMenuButton>
-    <DropdownMenu modal={true}>
-      <DropdownMenuTrigger asChild>
-        <SidebarMenuAction
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
-          showOnHover={!isActive}
-        >
-          <MoreHorizontalIcon />
-          <span className="sr-only">More</span>
-        </SidebarMenuAction>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem
-          className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-          onSelect={() => onDelete(chat.id)}
-        >
-          <TrashIcon />
-          <span>Delete</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </SidebarMenuItem>
-);
+  userId: string;
+}) => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const router = useRouter();
+
+  // Load projects when needed
+  const loadProjects = async () => {
+    if (projects.length > 0) return; // Only load once
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/projects');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to load projects');
+      }
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to load projects');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle moving a chat to a project
+  const handleMoveToProject = async (projectId: string | null) => {
+    try {
+      // Call the server action to update the chat's project
+      await updateChatProjectId(chat.id, projectId);
+      
+      toast.success(
+        projectId 
+          ? 'Chat moved to project' 
+          : 'Chat removed from project'
+      );
+      
+      // Refresh the data
+      router.refresh();
+    } catch (error) {
+      console.error('Error moving chat to project:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to move chat');
+    } finally {
+      setShowProjectSelector(false);
+    }
+  };
+
+  // Fetch the project name if this chat is in a project
+  const { data: projectName, error: projectNameError } = useSWR(
+    chat.project_id ? `/api/projects/${chat.project_id}/name` : null,
+    async (url) => {
+      const res = await fetch(url);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Unknown Project');
+      }
+      const data = await res.json();
+      return data.name;
+    },
+    { 
+      revalidateOnFocus: false,
+      errorRetryCount: 2
+    }
+  );
+
+  if (projectNameError && chat.project_id) {
+    console.error('Error fetching project name:', projectNameError);
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+          <div className="flex flex-col">
+            <span>{chat.title || 'New Chat'}</span>
+            {chat.project_id && (
+              <span className="text-xs text-sidebar-foreground/50">
+                In {projectName || 'project'}
+              </span>
+            )}
+          </div>
+        </Link>
+      </SidebarMenuButton>
+      <DropdownMenu modal={true}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuAction
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
+            showOnHover={!isActive}
+          >
+            <MoreHorizontalIcon />
+            <span className="sr-only">More</span>
+          </SidebarMenuAction>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="bottom" align="end">
+          {!showProjectSelector ? (
+            <>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onSelect={() => {
+                  loadProjects();
+                  setShowProjectSelector(true);
+                }}
+              >
+                <FolderIcon className="h-4 w-4" />
+                <span>Move to project</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
+                onSelect={() => onDelete(chat.id)}
+              >
+                <TrashIcon className="h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuLabel>Select a project</DropdownMenuLabel>
+              {isLoading ? (
+                <DropdownMenuItem disabled>
+                  <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
+                  <span>Loading projects...</span>
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuItem 
+                    onSelect={() => handleMoveToProject(null)}
+                    className="cursor-pointer"
+                  >
+                    <span>Remove from project</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {projects.length === 0 ? (
+                    <DropdownMenuItem disabled>
+                      <span>No projects found</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    projects.map((project) => (
+                      <DropdownMenuItem
+                        key={project.id}
+                        onSelect={() => handleMoveToProject(project.id)}
+                        className="cursor-pointer"
+                      >
+                        <span>{project.name}</span>
+                        {chat.project_id === project.id && (
+                          <CheckIcon className="ml-auto h-4 w-4" />
+                        )}
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onSelect={() => setShowProjectSelector(false)}
+                className="cursor-pointer"
+              >
+                <span>Cancel</span>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+};
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
@@ -227,7 +376,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
     return chats.reduce(
       (groups, chat) => {
-        const chatDate = new Date(chat.created_at); // Changed from createdAt to created_at
+        const chatDate = new Date(chat.created_at);
 
         if (isToday(chatDate)) {
           groups.today.push(chat);
@@ -279,6 +428,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            userId={user.id}
                           />
                         ))}
                       </>
@@ -299,6 +449,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            userId={user.id}
                           />
                         ))}
                       </>
@@ -319,6 +470,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            userId={user.id}
                           />
                         ))}
                       </>
@@ -339,6 +491,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            userId={user.id}
                           />
                         ))}
                       </>
@@ -359,6 +512,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            userId={user.id}
                           />
                         ))}
                       </>
