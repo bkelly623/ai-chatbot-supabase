@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
 
-export function AppSidebar({ user }: { user: User | null }) {
+export function AppSidebar({ user }: { user: User | undefined | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
