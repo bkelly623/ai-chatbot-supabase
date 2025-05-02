@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { experimental_useFormStatus as useFormStatus } from 'react-dom'; // Import useFormStatus
-import { createProject } from '@/actions/project-actions'; // Import the Server Action
+import { createProject } from '@/app/actions/project-actions'; //  ✅  Corrected import path!
 
 interface CreateProjectModalProps {
   open: boolean;
