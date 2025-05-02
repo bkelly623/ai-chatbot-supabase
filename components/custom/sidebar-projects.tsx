@@ -4,12 +4,11 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
-
 import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 export interface SidebarProjectsProps {
   user?: User | undefined;
