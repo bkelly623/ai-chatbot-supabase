@@ -17,7 +17,6 @@ export default async function Layout({
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
       <AppSidebar user={user} />
-      {/* Comments in JSX must be wrapped in braces */}
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
