@@ -30,7 +30,8 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
 }
 
-export const BotIcon = ({ className, ...props }: IconProps) => {
+// Define our custom icons
+const BotIcon = ({ className, ...props }: IconProps) => {
   return (
     <svg
       height="16"
@@ -51,7 +52,7 @@ export const BotIcon = ({ className, ...props }: IconProps) => {
   );
 };
 
-export const SupabaseIcon = () => {
+const SupabaseIcon = () => {
   return (
     <svg
       width="109"
@@ -113,7 +114,7 @@ export const SupabaseIcon = () => {
 };
 
 // Custom Vercel Icon - doesn't appear to be in Lucide
-export const VercelIcon = ({ className, size, ...props }: IconProps & { size?: number }) => {
+const VercelIcon = ({ className, size, ...props }: IconProps & { size?: number }) => {
   return (
     <svg
       aria-label="Vercel logotype"
@@ -132,6 +133,7 @@ export const VercelIcon = ({ className, size, ...props }: IconProps & { size?: n
   );
 };
 
+// Export everything together
 export {
   ArrowUpIcon,
   BotIcon,
