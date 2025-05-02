@@ -12,10 +12,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
-
-import { useSession } from '@/lib/auth'; //  ✅  Import useSession
-
+import { createClient } from '@/lib/supabase/server'; // Use server client
+import { getSession } from '@/db/cached-queries'; // Import getSession
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -24,9 +22,7 @@ interface CreateProjectModalProps {
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }) => {
   const [projectName, setProjectName] = useState('');
-  const supabase = createClient();
   const router = useRouter();
-  const { data: session } = useSession();  //  ✅  Get the session
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
@@ -34,16 +30,17 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
       return;
     }
 
-    if (!session?.user?.id) {   //  ✅  Ensure user is logged in
-      alert('You must be logged in to create a project.');
-      return;
-    }
-
-
     try {
+      const session = await getSession(); // Get the session
+      if (!session?.user?.id) {
+        alert('You must be logged in to create a project.');
+        return;
+      }
+
+      const supabase = createClient(); // Initialize Supabase client *after* getting the session
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ name: projectName, user_id: session.user.id }])  //  ✅  Include user_id
+        .insert([{ name: projectName, user_id: session.user.id }]) // Include user_id
         .select();
 
       if (error) {
@@ -53,7 +50,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
         console.log('Project created successfully!', data);
         onClose();
         setProjectName('');
-        router.refresh();
+        router.refresh(); // Refresh the route to update the sidebar
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error);
