@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; //  ✅  Import usePathname
 import React, { useEffect, useState, useCallback } from 'react';
 
 import CreateProjectModal from '@/components/custom/createprojectmodal';
@@ -26,6 +26,7 @@ import { BotIcon } from '@/components/custom/icons'; // Assuming BotIcon is stil
 export function AppSidebar({ user }: { user: User | null }) {
     const router = useRouter();
     const { setOpenMobile } = useSidebar();
+    const pathname = usePathname(); //  ✅  Call usePathname here
 
     // Function to safely convert User | null to User | undefined
     const getSafeUser = (): User | undefined => {
@@ -45,8 +46,6 @@ export function AppSidebar({ user }: { user: User | null }) {
         router.push(newChatUrl);
         router.refresh();
     }, [router, setOpenMobile, selectedProjectId]);
-
-    const pathname = usePathname();
 
     useEffect(() => {
         // Reset selected project when navigating outside of a project
