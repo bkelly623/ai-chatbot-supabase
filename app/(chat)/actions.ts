@@ -2,11 +2,11 @@
 
 import { CoreMessage, CoreUserMessage, generateText } from 'ai';
 import { cookies } from 'next/headers';
-import { revalidateTag } from 'next/cache'; // Import for cache invalidation
+import { revalidateTag } from 'next/cache';
 
 import { customModel } from '@/ai';
+import { getSession } from '@/db/cached-queries';
 import { createClient } from '@/lib/supabase/server';
-import { getSession } from '@/db/cached-queries'; // Import getSession
 
 export async function saveModelId(model: string) {
   const cookieStore = await cookies();
