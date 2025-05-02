@@ -11,35 +11,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/server'; // Use server client
-import { getSession } from '@/db/cached-queries'; // Import getSession
 import { experimental_useFormStatus as useFormStatus } from 'react-dom'; // Import useFormStatus
+import { createProject } from '@/actions/project-actions'; // Import the Server Action
 
 interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
-}
-
-async function createProject(projectName: string) {
-  'use server'; // Mark this as a Server Action
-
-  const session = await getSession(); // Get the session
-  if (!session?.user?.id) {
-    return { error: 'You must be logged in to create a project.' };
-  }
-
-  const supabase = await createClient(); // Initialize Supabase client *after* getting the session
-  const { data, error } = await supabase
-    .from('projects')
-    .insert([{ name: projectName, user_id: session.user.id }]) // Include user_id
-    .select();
-
-  if (error) {
-    console.error('Error creating project:', error);
-    return { error: 'Failed to create project.' };
-  }
-
-  return { data };
 }
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }) => {
@@ -53,7 +30,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
       return;
     }
 
-    const result = await createProject(projectName); // Call the Server Action
+    const result = await createProject(projectName); // Call the imported Server Action
 
     if (result?.error) {
       alert(result.error);
