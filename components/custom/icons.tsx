@@ -1,32 +1,30 @@
 // Import all the required Lucide icons
 import {
-  Plus as PlusIcon,
-  X as CrossIcon,
+  ArrowUp as ArrowUpIcon,
+  CheckCircle as CheckCirclFillIcon,
+  ChevronDown as ChevronDownIcon,
   Copy as CopyIcon,
-  Undo as UndoIcon,
-  Redo as RedoIcon,
-  Triangle as DeltaIcon,
+  CrossIcon,
   File as FileIcon,
-  Pencil as PencilEditIcon,
-  MessageSquare as MessageIcon,
   Loader as LoaderIcon,
-  ThumbsUp as ThumbUpIcon,
-  ThumbsDown as ThumbDownIcon,
+  MessageSquare as MessageIcon,
+  MoreHorizontal as MoreHorizontalIcon,
+  PanelLeft as SidebarLeftIcon,
+  Paperclip as PaperclipIcon,
+  Pen as PenIcon,
+  Pencil as PencilEditIcon,
+  Plus as PlusIcon,
+  Redo as RedoIcon,
   Sparkles as SparklesIcon,
   Square as StopIcon,
-  ArrowUp as ArrowUpIcon,
-  Paperclip as PaperclipIcon,
-  MoreHorizontal as MoreHorizontalIcon,
+  ThumbsDown as ThumbDownIcon,
+  ThumbsUp as ThumbUpIcon,
   Trash as TrashIcon,
-  PanelLeft as SidebarLeftIcon,
-  FileCheck as SummarizeIcon,
-  Pen as PenIcon,
-  ChevronDown as ChevronDownIcon,
-  CheckCircle as CheckCirclFillIcon
+  Triangle as DeltaIcon,
+  Undo as UndoIcon,
+  X as CrossIcon
 } from 'lucide-react';
-
 import React from 'react';
-
 import { cn } from '@/lib/utils';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
