@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import SidebarProjects from '@/components/custom/app-sidebar'; // ✅ Correct import
+import SidebarProjects from '@/components/custom/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { getSession } from '@/db/cached-queries';
 
@@ -16,7 +16,7 @@ export default async function Layout({
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      <SidebarProjects user={user} /> // ✅ Correct usage
+      <SidebarProjects user={user || undefined} />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
