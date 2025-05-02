@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { experimental_useFormStatus as useFormStatus } from 'react-dom'; // Import useFormStatus
-import { createProject } from '@/app/actions/project-actions'; //  ✅  Corrected import path!
+import { useFormStatus } from 'react-dom';  //  ✅  Corrected import
+import { createProject } from '@/app/actions/project-actions';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -22,7 +22,7 @@ interface CreateProjectModalProps {
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }) => {
   const [projectName, setProjectName] = useState('');
   const router = useRouter();
-  const { pending } = useFormStatus(); // Get the form status
+  const { pending } = useFormStatus();
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
@@ -30,7 +30,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
       return;
     }
 
-    const result = await createProject(projectName); // Call the imported Server Action
+    const result = await createProject(projectName);
 
     if (result?.error) {
       alert(result.error);
@@ -38,7 +38,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
       console.log('Project created successfully!', result.data);
       onClose();
       setProjectName('');
-      router.refresh(); // Refresh the route to update the sidebar
+      router.refresh();
     }
   };
 
@@ -59,7 +59,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
               placeholder="E.g. Party planning"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              disabled={pending} // Disable input while processing
+              disabled={pending}
             />
           </div>
           <div>
