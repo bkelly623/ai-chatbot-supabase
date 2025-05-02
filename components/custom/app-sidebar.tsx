@@ -1,12 +1,12 @@
 'use client';
 
 import { User } from '@supabase/supabase-js';
-import { useRouter, usePathname } from 'next/navigation'; //  ✅  Import usePathname
+import { useRouter, usePathname } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
 import CreateProjectModal from '@/components/custom/createprojectmodal';
-import { PlusIcon } from '@/components/custom/icons';
-import { SidebarHistory } from '@/components/custom/sidebar-history'; // Assuming this exists
+import { BotIcon, PlusIcon } from '@/components/custom/icons';
+import { SidebarHistory } from '@/components/custom/sidebar-history';
 import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,11 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
-import { BotIcon } from '@/components/custom/icons'; // Assuming BotIcon is still needed
 
 export function AppSidebar({ user }: { user: User | null }) {
     const router = useRouter();
     const { setOpenMobile } = useSidebar();
-    const pathname = usePathname(); //  ✅  Call usePathname here
+    const pathname = usePathname();
 
     // Function to safely convert User | null to User | undefined
     const getSafeUser = (): User | undefined => {
@@ -67,7 +66,7 @@ export function AppSidebar({ user }: { user: User | null }) {
                             }}
                             className="flex flex-row gap-3 items-center"
                         >
-                            <BotIcon className="size-6" /> {/* Using BotIcon as a placeholder for the logo */}
+                            <BotIcon className="size-6" />
                             <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
                                 Chatbot
                             </span>
@@ -87,7 +86,6 @@ export function AppSidebar({ user }: { user: User | null }) {
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupContent>
-                        {/* Use type assertion to avoid the TypeScript error */}
                         <SidebarProjects
                             user={safeUser}
                             {...({ setSelectedProjectId } as any)}
