@@ -103,28 +103,58 @@ const ChatItem = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const [projectName, setProjectName] = useState<string | null>(null);
   const router = useRouter();
 
-  // Load projects when needed
+  // Load projects directly from supabase when needed
   const loadProjects = async () => {
     if (projects.length > 0) return; // Only load once
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/projects');
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to load projects');
-      }
-      const data = await response.json();
-      setProjects(data);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to load projects');
+      toast.error('Failed to load projects');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Load project name if this chat is in a project
+  useEffect(() => {
+    const fetchProjectName = async () => {
+      if (!chat.project_id) {
+        setProjectName(null);
+        return;
+      }
+      
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('projects')
+          .select('name')
+          .eq('id', chat.project_id)
+          .single();
+          
+        if (error) throw error;
+        setProjectName(data?.name || 'Project');
+      } catch (error) {
+        console.error('Error fetching project name:', error);
+        setProjectName('Project');
+      }
+    };
+    
+    fetchProjectName();
+  }, [chat.project_id]);
 
   // Handle moving a chat to a project
   const handleMoveToProject = async (projectId: string | null) => {
@@ -142,33 +172,11 @@ const ChatItem = ({
       router.refresh();
     } catch (error) {
       console.error('Error moving chat to project:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to move chat');
+      toast.error('Failed to move chat');
     } finally {
       setShowProjectSelector(false);
     }
   };
-
-  // Fetch the project name if this chat is in a project
-  const { data: projectName, error: projectNameError } = useSWR(
-    chat.project_id ? `/api/projects/${chat.project_id}/name` : null,
-    async (url) => {
-      const res = await fetch(url);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Unknown Project');
-      }
-      const data = await res.json();
-      return data.name;
-    },
-    { 
-      revalidateOnFocus: false,
-      errorRetryCount: 2
-    }
-  );
-
-  if (projectNameError && chat.project_id) {
-    console.error('Error fetching project name:', projectNameError);
-  }
 
   return (
     <SidebarMenuItem>
@@ -176,9 +184,9 @@ const ChatItem = ({
         <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
           <div className="flex flex-col">
             <span>{chat.title || 'New Chat'}</span>
-            {chat.project_id && (
+            {chat.project_id && projectName && (
               <span className="text-xs text-sidebar-foreground/50">
-                In {projectName || 'project'}
+                In {projectName}
               </span>
             )}
           </div>
