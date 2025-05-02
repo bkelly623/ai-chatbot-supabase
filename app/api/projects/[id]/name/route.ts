@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getProjectById } from '@/db/cached-queries';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Verify the user is authenticated
     const supabase = await createClient();
@@ -23,10 +25,15 @@ export async function GET(
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
     
-    // Get the project
-    const project = await getProjectById(projectId);
+    // Get the project directly from the database
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('id, name, user_id')
+      .eq('id', projectId)
+      .single();
     
-    if (!project) {
+    if (projectError || !project) {
+      console.error('Error fetching project:', projectError);
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     
