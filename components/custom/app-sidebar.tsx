@@ -2,11 +2,12 @@
 
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
+import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import SidebarProjects from '@/components/custom/sidebar-projects';
+import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects';
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {

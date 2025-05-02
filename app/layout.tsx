@@ -63,10 +63,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* <AuthProvider> */}
+          {/* AuthProvider would go here */}
           <Toaster position="top-center" />
           {children}
-          {/* </AuthProvider> */}
+          {/* End of AuthProvider */}
         </ThemeProvider>
       </body>
     </html>
