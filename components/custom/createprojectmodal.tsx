@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react'; //  ✅  Import useState
-import { useRouter } from 'next/navigation'; //  ✅ Import useRouter
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   AlertDialog,
@@ -12,7 +12,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';  //  ✅  Import Supabase client
+import { createClient } from '@/lib/supabase/client';
+
+import { useSession } from '@/lib/auth'; //  ✅  Import useSession
+
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -20,31 +23,37 @@ interface CreateProjectModalProps {
 }
 
 const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }) => {
-  const [projectName, setProjectName] = useState('');  //  ✅  State for project name
-  const supabase = createClient();  //  ✅  Initialize Supabase client
-  const router = useRouter();  //  ✅  Initialize useRouter
+  const [projectName, setProjectName] = useState('');
+  const supabase = createClient();
+  const router = useRouter();
+  const { data: session } = useSession();  //  ✅  Get the session
 
-  const handleCreateProject = async () => {  //  ✅  Async function to create project
+  const handleCreateProject = async () => {
     if (!projectName.trim()) {
-      //  ✅  Basic validation
       alert('Project name cannot be empty.');
       return;
     }
 
+    if (!session?.user?.id) {   //  ✅  Ensure user is logged in
+      alert('You must be logged in to create a project.');
+      return;
+    }
+
+
     try {
       const { data, error } = await supabase
         .from('projects')
-        .insert([{ name: projectName }])  //  ✅  Insert project into Supabase
-        .select();  //  ✅  Select the newly created row
+        .insert([{ name: projectName, user_id: session.user.id }])  //  ✅  Include user_id
+        .select();
 
       if (error) {
         console.error('Error creating project:', error);
         alert('Failed to create project.');
       } else {
         console.log('Project created successfully!', data);
-        onClose();  //  ✅  Close the modal
-        setProjectName('');  //  ✅  Clear the input
-        router.refresh(); // ✅ Refresh the route to update the sidebar
+        onClose();
+        setProjectName('');
+        router.refresh();
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error);
@@ -67,8 +76,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
               id="project-name"
               className="col-span-3"
               placeholder="E.g. Party planning"
-              value={projectName}  //  ✅  Bind input value
-              onChange={(e) => setProjectName(e.target.value)}  //  ✅  Update state on change
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
             />
           </div>
           <div>
@@ -82,7 +91,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose }
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" onClick={handleCreateProject}>  {/* ✅  Call handleCreateProject */}
+          <Button type="submit" onClick={handleCreateProject}>
             Create Project
           </Button>
         </AlertDialogFooter>
