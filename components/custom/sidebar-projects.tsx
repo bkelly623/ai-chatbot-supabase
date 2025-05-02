@@ -1,18 +1,19 @@
 'use client';
 
-import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
+import { createClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
+
+import CreateProjectModal from '@/components/custom/createprojectmodal';  //  ✅  Moved to be with other components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
+import { Plus } from 'lucide-react';
 
-import type { User } from '@supabase/supabase-js';
-import CreateProjectModal from '@/components/custom/createprojectmodal';  //  ✅  IMPORT IT HERE!
 
 export interface SidebarProjectsProps {
-  user?: User | undefined; // Make user prop optional
+  user?: User | undefined;
 }
 
 export default function SidebarProjects(props: SidebarProjectsProps) {
@@ -21,7 +22,7 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false); // State for modal visibility
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false);
   const supabase = createClient();
   const router = useRouter();
 
