@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 
 import { PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import SidebarProjects from '@/components/custom/sidebar-projects';
+import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects'; // Import the component AND its props
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,7 +69,7 @@ export function AppSidebar({ user }: { user: User | null }) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarProjects user={safeUser} />
+            <SidebarProjects user={safeUser as SidebarProjectsProps['user']} /> {/* Forceful type assertion */}
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
