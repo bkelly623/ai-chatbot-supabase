@@ -114,6 +114,7 @@ const ChatItem = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   const [projectName, setProjectName] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
 
   // Load projects directly from supabase when needed
@@ -165,6 +166,13 @@ const ChatItem = ({
     
     fetchProjectName();
   }, [chat.project_id]);
+  
+  // Reset project selector when dropdown is closed
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      setShowProjectSelector(false);
+    }
+  }, [isDropdownOpen]);
 
   // Handle moving a chat to a project
   const handleMoveToProject = async (projectId: string | null) => {
@@ -185,9 +193,10 @@ const ChatItem = ({
       toast.error('Failed to move chat');
     } finally {
       setShowProjectSelector(false);
+      setIsDropdownOpen(false);
     }
   };
-
+  
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
@@ -202,7 +211,11 @@ const ChatItem = ({
           </div>
         </Link>
       </SidebarMenuButton>
-      <DropdownMenu modal={true}>
+      <DropdownMenu 
+        modal={true} 
+        open={isDropdownOpen} 
+        onOpenChange={setIsDropdownOpen}
+      >
         <DropdownMenuTrigger asChild>
           <SidebarMenuAction
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
@@ -217,7 +230,9 @@ const ChatItem = ({
             <>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onSelect={() => {
+                onSelect={(e) => {
+                  // Prevent default onSelect behavior which closes the dropdown
+                  e.preventDefault();
                   loadProjects();
                   setShowProjectSelector(true);
                 }}
@@ -245,7 +260,10 @@ const ChatItem = ({
               ) : (
                 <>
                   <DropdownMenuItem 
-                    onSelect={() => handleMoveToProject(null)}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleMoveToProject(null);
+                    }}
                     className="cursor-pointer"
                   >
                     <span>Remove from project</span>
@@ -259,7 +277,10 @@ const ChatItem = ({
                     projects.map((project) => (
                       <DropdownMenuItem
                         key={project.id}
-                        onSelect={() => handleMoveToProject(project.id)}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          handleMoveToProject(project.id);
+                        }}
                         className="cursor-pointer"
                       >
                         <span>{project.name}</span>
@@ -273,7 +294,10 @@ const ChatItem = ({
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onSelect={() => setShowProjectSelector(false)}
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowProjectSelector(false);
+                }}
                 className="cursor-pointer"
               >
                 <span>Cancel</span>
