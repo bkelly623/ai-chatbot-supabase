@@ -45,4 +45,44 @@ export const SupabaseIcon = () => {
         fill="url(#paint1_linear)"
       />
       <path
-        d="M0.292386 107.284C3.15189 110.885 8.94979 111.912 9.01867 107.314L10.0262 40.0627L55....
+        d="M45.317 2.07103C48.1765 -1.53037 53.9745 0.442937 54.0434 5.04075L55.2585 72.2922H9.83391C1.64429 72.2922 -2.92191 62.8321 2.17152 56.4175L45.317 2.07103Z"
+        fill="url(#paint2_linear)"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear"
+          x1="53.9738"
+          y1="54.974"
+          x2="94.1635"
+          y2="71.8295"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#249361" />
+          <stop offset="1" stopColor="#3ECF8E" />
+        </linearGradient>
+        <linearGradient
+          id="paint1_linear"
+          x1="36.1558"
+          y1="30.578"
+          x2="54.4844"
+          y2="65.0806"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopOpacity="0" />
+          <stop offset="1" stopOpacity="0.2" />
+        </linearGradient>
+        <linearGradient
+          id="paint2_linear"
+          x1="55.2585"
+          y1="57.381"
+          x2="15.0687"
+          y2="40.5255"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#249361" />
+          <stop offset="1" stopColor="#3ECF8E" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
