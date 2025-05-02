@@ -1,5 +1,4 @@
 // Import all the required Lucide icons
-// This is a better approach than manually creating each icon
 import {
   Plus as PlusIcon,
   X as CrossIcon,
@@ -25,9 +24,7 @@ import {
   ChevronDown as ChevronDownIcon,
   CheckCircle as CheckCirclFillIcon
 } from 'lucide-react';
-
 import React from 'react';
-
 import { cn } from '@/lib/utils';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
