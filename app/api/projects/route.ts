@@ -1,35 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Create Supabase client
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    // Verify user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Fetch all projects for this user
-    const { data: projects, error: projectsError } = await supabase
+    const { data } = await supabase
       .from('projects')
       .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-      
-    if (projectsError) {
-      console.error('Error fetching projects:', projectsError);
-      return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
-    }
+      .eq('user_id', user.id);
     
-    // Return the projects array (or empty array if null)
-    return NextResponse.json(projects || []);
+    return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
