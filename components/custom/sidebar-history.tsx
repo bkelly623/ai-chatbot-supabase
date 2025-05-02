@@ -45,9 +45,19 @@ import {
 } from '@/components/ui/sidebar';
 import { getChatsByUserIdQuery } from '@/db/queries';
 import { createClient } from '@/lib/supabase/client';
-import { Chat, Database } from '@/lib/supabase/types';
+import { Database } from '@/lib/supabase/types';
 
 type Project = Database['public']['Tables']['projects']['Row'];
+// Extended Chat type that includes project_id
+interface Chat {
+  id: string;
+  title: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  project_id?: string | null;
+}
+
 type GroupedChats = {
   today: Chat[];
   yesterday: Chat[];
