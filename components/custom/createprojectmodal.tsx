@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { useRouter } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
+
+import { createProject } from '@/app/actions/project-actions';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -11,8 +15,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useFormStatus } from 'react-dom';  //  ✅  Corrected import
-import { createProject } from '@/app/actions/project-actions';
 
 interface CreateProjectModalProps {
   open: boolean;
