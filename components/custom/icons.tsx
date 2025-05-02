@@ -4,6 +4,7 @@ import {
   ChevronDown as ChevronDownIcon,
   Copy as CopyIcon,
   File as FileIcon,
+  FileCheck as FileCheckIcon,
   Loader as LoaderIcon,
   MessageSquare as MessageIcon,
   MoreHorizontal as MoreHorizontalIcon,
@@ -133,6 +134,9 @@ const VercelIcon = ({ className, size, ...props }: IconProps & { size?: number }
   );
 };
 
+// Use FileCheckIcon as SummarizeIcon
+const SummarizeIcon = FileCheckIcon;
+
 // Export everything together
 export {
   ArrowUpIcon,
@@ -154,6 +158,7 @@ export {
   SidebarLeftIcon,
   SparklesIcon,
   StopIcon,
+  SummarizeIcon,
   SupabaseIcon,
   ThumbDownIcon,
   ThumbUpIcon,
