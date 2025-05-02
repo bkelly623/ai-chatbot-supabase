@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable import/order */
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
+/* eslint-enable import/order */
 
 export interface SidebarProjectsProps {
   user?: User | undefined;
