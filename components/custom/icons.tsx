@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface BotIconProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
@@ -12,7 +12,7 @@ export const BotIcon = ({ className, ...props }: BotIconProps) => {
       strokeLinejoin="round"
       viewBox="0 0 16 16"
       width="16"
-      style={{ color: 'currentcolor' }}
+      style={{ color: 'currentColor' }} //  ✅  "currentColor" is preferred
       className={cn(className)}
       {...props}
     >
@@ -21,12 +21,12 @@ export const BotIcon = ({ className, ...props }: BotIconProps) => {
         clipRule="evenodd"
         d="M8.75 2.79933C9.19835 2.53997 9.5 2.05521 9.5 1.5C9.5 0.671573 8.82843 0 8 0C7.17157 0 6.5 0.671573 6.5 1.5C6.5 2.05521 6.80165 2.53997 7.25 2.79933V5H7C4.027 5 1.55904 7.16229 1.08296 10H0V13H1V14.5V16H2.5H13.5H15V14.5V13H16V10H14.917C14.441 7.16229 11.973 5 9 5H8.75V2.79933ZM7 6V9H6V10H7V11H8V10H9V9H8V6H7ZM9 6V8H10V9H9V10H8V9H7V8H6V6H9Z"
         fill="currentColor"
-      ></path>
+      />
     </svg>
   );
 };
 
-export const SupabaseIcon = () => {  //  ✅  Corrected: Added curly braces and explicit return
+export const SupabaseIcon = () => {
   return (
     <svg
       width="109"
