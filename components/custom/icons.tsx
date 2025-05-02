@@ -138,12 +138,14 @@ export {
 };
 
 // Custom Vercel Icon - doesn't appear to be in Lucide
-export const VercelIcon = ({ className, ...props }: IconProps) => {
+export const VercelIcon = ({ className, size, ...props }: IconProps & { size?: number }) => {
   return (
     <svg
       aria-label="Vercel logotype"
       role="img"
       viewBox="0 0 283 64"
+      width={size}
+      height={size}
       className={cn('size-4', className)}
       {...props}
     >
