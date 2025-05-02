@@ -3,14 +3,14 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useCallback } from 'react';
 
+import { Plus } from 'lucide-react';
+
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-import CreateProjectModal from '@/components/custom/createprojectmodal';  //  ✅  Moved to be with other components
+import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus } from 'lucide-react';
-
 
 export interface SidebarProjectsProps {
   user?: User | undefined;
@@ -79,8 +79,8 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
       </h2>
 
       {loading && <div className="animate-pulse bg-muted/50 h-8 w-full rounded-md">
-          {/* Placeholder while loading */}
-        </div>}
+        {/* Placeholder while loading */}
+      </div>}
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
