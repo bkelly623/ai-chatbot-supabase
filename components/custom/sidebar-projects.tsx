@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 
 import type { User } from '@supabase/supabase-js';
+import CreateProjectModal from '@/components/custom/createprojectmodal';  //  ✅  IMPORT IT HERE!
 
 export interface SidebarProjectsProps {
   user?: User | undefined; // Make user prop optional
