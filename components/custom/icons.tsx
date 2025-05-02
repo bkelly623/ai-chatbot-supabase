@@ -110,7 +110,9 @@ import {
   Trash as TrashIcon,
   PanelLeft as SidebarLeftIcon,
   FileCheck as SummarizeIcon,
-  Pen as PenIcon
+  Pen as PenIcon,
+  ChevronDown as ChevronDownIcon,
+  CheckCircle as CheckCirclFillIcon
 } from 'lucide-react';
 
 export {
@@ -134,7 +136,9 @@ export {
   TrashIcon,
   SidebarLeftIcon,
   SummarizeIcon,
-  PenIcon
+  PenIcon,
+  ChevronDownIcon,
+  CheckCirclFillIcon
 };
 
 // Custom Vercel Icon - doesn't appear to be in Lucide
