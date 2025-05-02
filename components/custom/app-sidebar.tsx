@@ -68,7 +68,7 @@ export function AppSidebar({ user }: { user: User | undefined | null }) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarProjects user={safeUser} />
+            <SidebarProjects user={safeUser as User | undefined} />  {/* Explicit type casting */}
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
