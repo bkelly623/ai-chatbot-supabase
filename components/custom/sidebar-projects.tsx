@@ -1,40 +1,101 @@
 'use client';
 
-import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useCallback } from 'react';
 
-import { PlusIcon } from 'lucide-react';
-
-import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { Button } from '@/components/ui/button';
-// Other imports from @/components/ui would go here
-// ...
+import { Input } from '@/components/ui/input';
+import { createClient } from '@/lib/supabase/client';
 
-// Rest of your component code
-export const SidebarProjects = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+import type { User } from '@supabase/supabase-js';
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
+export interface SidebarProjectsProps {
+  user?: User | undefined; // Make user prop optional
+}
+
+export default function SidebarProjects(props: SidebarProjectsProps) {
+  const { user } = props;
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false); // State for modal visibility
+  const supabase = createClient();
+  const router = useRouter();
+
+  const fetchProjects = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let query = supabase.from('projects').select('*').order('created_at', {
+        ascending: false
+      });
+
+      if (user?.id) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const {
+        data,
+        error
+      } = await query;
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setProjects(data || []);
+      }
+    } catch (e) {
+      setError('An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, supabase]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const handleSelectProject = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    router.push(`/?projectId=${projectId}`);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseCreateProjectModal = () => {
+    setShowCreateProjectModal(false);
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Projects</h2>
-        <Button variant="ghost" size="icon" onClick={handleOpenModal}>
-          <PlusIcon className="h-4 w-4" />
+    <div className="p-2 space-y-2">
+      <h2 className="text-sm font-semibold text-muted-foreground flex items-center justify-between">
+        Projects
+        <Button variant="ghost" size="sm" onClick={() => setShowCreateProjectModal(true)}>
+          + New Project
         </Button>
+      </h2>
+
+      {loading && <div className="animate-pulse bg-muted/50 h-8 w-full rounded-md">
+          {/* Placeholder while loading */}
+        </div>}
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
+      <div className="space-y-1">
+        {projects.map(project => (
+          <div
+            key={project.id}
+            className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer ${selectedProjectId === project.id ? 'bg-muted' : ''}`}
+            onClick={() => handleSelectProject(project.id)}
+          >
+            {project.name}
+          </div>
+        ))}
       </div>
-      
-      {/* Your project list would go here */}
-      
-      <CreateProjectModal open={isModalOpen} onClose={handleCloseModal} />
+
+      {/* Conditionally render the CreateProjectModal */}
+      <CreateProjectModal open={showCreateProjectModal} onClose={handleCloseCreateProjectModal} />
     </div>
   );
-};
-
-export default SidebarProjects;
+}
