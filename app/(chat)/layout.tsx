@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 
-import SidebarProjects from '@/components/custom/app-sidebar';
+import { AppSidebar } from '@/components/custom/app-sidebar'; // Changed to named import
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { getSession } from '@/db/cached-queries';
 
@@ -16,7 +16,7 @@ export default async function Layout({
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      <SidebarProjects user={user || undefined} />
+      <AppSidebar user={user || undefined} /> // Using AppSidebar
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
