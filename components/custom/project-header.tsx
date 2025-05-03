@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Home as HomeIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { BetterTooltip } from '@/components/ui/tooltip';
 import { 
   PlusIcon,
   FolderIcon,
-  HomeIcon
 } from '@/components/custom/icons';
 import { Database } from '@/lib/supabase/types';
 
