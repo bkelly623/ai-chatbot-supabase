@@ -1,15 +1,5 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-
-import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
-import { Chat as PreviewChat } from '@/components/custom/chat';
-import {
-  getChatById,
-  getMessagesByChatId,
-  getSession,
-} from '@/db/cached-queries';
-import { convertToUIMessages } from '@/lib/utils';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,6 +8,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontalIcon } from '@/components/custom/icons';
+import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
+import { Chat as PreviewChat } from '@/components/custom/chat';
+import {
+  getChatById,
+  getMessagesByChatId,
+  getSession,
+} from '@/db/cached-queries';
+import { convertToUIMessages } from '@/lib/utils';
 
 export default async function Page(props: { params: Promise<any> }) {
   const params = await props.params;
@@ -49,7 +47,6 @@ export default async function Page(props: { params: Promise<any> }) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center px-4 py-2 border-b">
-        {/* You can insert a title on the left if needed */}
         <div />
 
         <div className="flex items-center gap-2">
@@ -60,7 +57,7 @@ export default async function Page(props: { params: Promise<any> }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <MoreHorizontalIcon className="h-5 w-5" />
+                <MoreHorizontalIcon className="size-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
