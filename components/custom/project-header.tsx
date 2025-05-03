@@ -1,9 +1,9 @@
 'use client';
 
+import { Home as HomeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Home as HomeIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { FolderIcon, PlusIcon } from '@/components/custom/icons';
