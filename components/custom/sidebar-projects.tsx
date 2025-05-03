@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 import { FolderIcon, PlusIcon } from '@/components/custom/icons';
