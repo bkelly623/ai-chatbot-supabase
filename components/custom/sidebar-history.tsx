@@ -232,168 +232,132 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
     setRenameDialogOpen(true);
   };
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Search input */}
-      <div className="px-4 py-2">
-        <div className="relative">
-          <Input
-            placeholder="Search chats..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
-          {searchTerm && (
+  // JSX for the chat list section
+  const renderChatList = () => {
+    if (loading) {
+      return (
+        <div className="space-y-2 p-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-full" />
+          ))}
+        </div>
+      );
+    }
+
+    if (filteredChats.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+          <p className="mb-2">No chats found</p>
+          {searchTerm ? (
             <Button
               variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full"
+              size="sm"
               onClick={() => setSearchTerm('')}
             >
-              <span className="sr-only">Clear search</span>
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4">
-                <path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-              </svg>
+              Clear search
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/')}
+            >
+              Start a new chat
             </Button>
           )}
         </div>
-      </div>
+      );
+    }
 
-      {/* History title with clear all button */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <div className="flex items-center">
-          <ClockIcon className="mr-2 size-4" />
-          <h2 className="text-sm font-semibold">Chat History</h2>
-        </div>
-        {chats.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => setClearAllDialogOpen(true)}
-          >
-            <TrashIcon className="size-4" />
-            <span className="sr-only">Clear history</span>
-          </Button>
-        )}
-      </div>
-
-      {/* Chat list */}
-      <div className="flex-1 overflow-auto px-2">
-        {loading ? (
-          <div className="space-y-2 p-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : filteredChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-            <p className="mb-2">No chats found</p>
-            {searchTerm ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchTerm('')}
-              >
-                Clear search
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/')}
-              >
-                Start a new chat
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {groupedChats.map(([group, chats]) => (
-              <div key={group}>
-                <div
-                  className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
-                  onClick={() => toggleGroup(group)}
+    return (
+      <div className="space-y-4">
+        {groupedChats.map(([group, chats]) => (
+          <div key={group}>
+            <div
+              className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
+              onClick={() => toggleGroup(group)}
+            >
+              <span>{group}</span>
+              {collapsedGroups.includes(group) ? (
+                <ChevronDownIcon className="size-4" />
+              ) : (
+                <ChevronUpIcon className="size-4" />
+              )}
+            </div>
+            <AnimatePresence initial={false}>
+              {!collapsedGroups.includes(group) && (
+                <motion.div
+                  key={group}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
                 >
-                  <span>{group}</span>
-                  {collapsedGroups.includes(group) ? (
-                    <ChevronDownIcon className="size-4" />
-                  ) : (
-                    <ChevronUpIcon className="size-4" />
-                  )}
-                </div>
-                <AnimatePresence initial={false}>
-                  {!collapsedGroups.includes(group) && (
-                    <motion.div
-                      key={group}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="space-y-1 pl-2">
-                        {chats.map((chat) => (
-                          <div
-                            key={chat.id}
-                            className={`group flex items-center justify-between rounded px-2 py-1 text-sm ${
-                              chat.id === activeChat
-                                ? 'bg-accent'
-                                : 'hover:bg-muted'
-                            }`}
-                          >
-                            <Link
-                              href={`/chat/${chat.id}`}
-                              className="flex-1 truncate"
+                  <div className="space-y-1 pl-2">
+                    {chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        className={`group flex items-center justify-between rounded px-2 py-1 text-sm ${
+                          chat.id === activeChat
+                            ? 'bg-accent'
+                            : 'hover:bg-muted'
+                        }`}
+                      >
+                        <Link
+                          href={`/chat/${chat.id}`}
+                          className="flex-1 truncate"
+                        >
+                          {chat.title || 'New Chat'}
+                        </Link>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100"
                             >
-                              {chat.title || 'New Chat'}
-                            </Link>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                                >
-                                  <MoreHorizontalIcon className="size-4" />
-                                  <span className="sr-only">
-                                    More options
-                                  </span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    openRenameDialog(
-                                      chat.id,
-                                      chat.title
-                                    )
-                                  }
-                                >
-                                  Rename
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={() => handleDeleteChat(chat.id)}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        ))}
+                              <MoreHorizontalIcon className="size-4" />
+                              <span className="sr-only">
+                                More options
+                              </span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                openRenameDialog(
+                                  chat.id,
+                                  chat.title
+                                )
+                              }
+                            >
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteChat(chat.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        )}
+        ))}
       </div>
+    );
+  };
 
-      {/* Rename dialog */}
+  // JSX for dialogs
+  const renderDialogs = () => (
+    <>
       <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -421,7 +385,6 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Clear all dialog */}
       <Dialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -446,6 +409,58 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-2">
+        <div className="relative">
+          <Input
+            placeholder="Search chats..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full"
+              onClick={() => setSearchTerm('')}
+            >
+              <span className="sr-only">Clear search</span>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4">
+                <path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+              </svg>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center">
+          <ClockIcon className="mr-2 size-4" />
+          <h2 className="text-sm font-semibold">Chat History</h2>
+        </div>
+        {chats.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={() => setClearAllDialogOpen(true)}
+          >
+            <TrashIcon className="size-4" />
+            <span className="sr-only">Clear history</span>
+          </Button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-auto px-2">
+        {renderChatList()}
+      </div>
+
+      {renderDialogs()}
     </div>
   );
 }
