@@ -1,17 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { Home as HomeIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
+import { FolderIcon, PlusIcon } from '@/components/custom/icons';
 import { Button } from '@/components/ui/button';
 import { BetterTooltip } from '@/components/ui/tooltip';
-import { 
-  PlusIcon,
-  FolderIcon,
-} from '@/components/custom/icons';
 import { Database } from '@/lib/supabase/types';
 
 type Project = Database['public']['Tables']['projects']['Row'];
