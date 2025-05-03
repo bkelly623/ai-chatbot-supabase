@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { 
-  BetterTooltip,
-} from '@/components/ui/tooltip';
+import { BetterTooltip } from '@/components/ui/tooltip';
 import { 
   PlusIcon,
   FolderIcon,
+  HomeIcon
 } from '@/components/custom/icons';
 import { Database } from '@/lib/supabase/types';
 
@@ -24,9 +25,10 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
 
   // Function to create a new chat in this project
   const handleCreateNewChat = () => {
-    // Navigate to new chat page with project query param
-    // The chat creation logic will read this param to associate with project
-    router.push(`/?project=${project.id}`);
+    // Navigate to home page with project query param
+    // We're using projectId parameter to match your existing code
+    router.push(`/?projectId=${project.id}`);
+    router.refresh();
   };
 
   return (
@@ -44,13 +46,18 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
             className="flex items-center gap-1"
           >
             <PlusIcon className="size-4" />
-            <span>New Chat</span>
+            <span className="hidden sm:inline">New Chat</span>
           </Button>
         </BetterTooltip>
         
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/">Back to Chats</Link>
-        </Button>
+        <BetterTooltip content="Back to home">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/">
+              <HomeIcon className="size-4" />
+              <span className="sr-only">Home</span>
+            </Link>
+          </Button>
+        </BetterTooltip>
       </div>
     </header>
   );
