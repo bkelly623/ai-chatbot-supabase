@@ -7,16 +7,8 @@ import { toast } from 'sonner';
 import { useWindowSize } from 'usehooks-ts';
 
 import { updateChatProjectId } from '@/app/(chat)/actions';
-import { 
-  CheckIcon, 
-  FolderIcon, 
-  LoaderIcon, 
-  MoreHorizontalIcon, 
-  PlusIcon, 
-  VercelIcon 
-} from '@/components/custom/icons';
+import { CheckIcon, FolderIcon, LoaderIcon, MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
 import { SidebarToggle } from '@/components/custom/sidebar-toggle';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { BetterTooltip } from '@/components/ui/tooltip';
 import { createClient } from '@/lib/supabase/client';
+
 import { useSidebar } from '../ui/sidebar';
 
 type Project = {
