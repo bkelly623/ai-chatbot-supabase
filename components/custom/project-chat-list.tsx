@@ -1,8 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -26,13 +26,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
 
 interface ProjectChatListProps {
   chats: any[];
