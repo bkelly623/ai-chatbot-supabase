@@ -1,102 +1,97 @@
-'use client';
+"use client"
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { useWindowSize } from 'usehooks-ts';
-
-import { updateChatProjectId } from '@/app/(chat)/actions';
-import { CheckIcon, FolderIcon, LoaderIcon, MoreHorizontalIcon } from '@/components/custom/icons';
-import { SidebarToggle } from '@/components/custom/sidebar-toggle';
-import { Button } from '@/components/ui/button';
+import { useRouter } from "next/navigation"
+import { ChatShareDialog } from "@/components/chat-share-dialog"
+import { Button } from "@/components/ui/button"
+import { Chat } from "@/lib/types"
+import { useState } from "react"
+import { DotsHorizontalIcon, PlusIcon } from "@radix-ui/react-icons"
+import { updateChatProject } from "@/app/actions/update-chat-project"
+import { useUserProjects } from "@/lib/hooks/use-user-projects"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { BetterTooltip } from '@/components/ui/tooltip';
-import { createClient } from '@/lib/supabase/client';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
 
-type Project = {
-  id: string;
-  name: string;
-  user_id: string;
-  created_at: string;
-};
+interface ChatHeaderProps {
+  chat: Chat
+}
 
-export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
-  const router = useRouter();
-  const { width } = useWindowSize();
-  const { id: chatId } = useParams() as { id: string };
+export function ChatHeader({ chat }: ChatHeaderProps) {
+  const router = useRouter()
+  const { projects } = useUserProjects()
+  const [showProjects, setShowProjects] = useState(false)
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.from('projects').select('*');
-      if (!error && data) setProjects(data);
-    };
-    fetchProjects();
-  }, []);
-
-  const handleMoveChat = async (projectId: string) => {
-    if (!chatId || !projectId) return;
-    try {
-      setIsLoading(true);
-      await updateChatProjectId(chatId, projectId);
-      setCurrentProjectId(projectId);
-      toast.success('Chat moved successfully.');
-      router.refresh();
-    } catch (err) {
-      toast.error('Failed to move chat.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const moveToProject = async (projectId: string) => {
+    await updateChatProject(chat.id, projectId)
+    router.refresh()
+  }
 
   return (
-    <div className="flex h-16 items-center justify-between border-b px-4">
-      <SidebarToggle />
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+    <div className="flex items-center justify-between border-b px-4 py-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1 text-sm text-muted-foreground"
+        onClick={() => router.push("/")}
+      >
+        <PlusIcon className="h-4 w-4" />
+        New Chat
+      </Button>
+
+      <div className="flex items-center space-x-2">
+        <ChatShareDialog chat={chat} />
+
+        <Popover open={showProjects} onOpenChange={setShowProjects}>
+          <PopoverTrigger asChild>
             <Button variant="ghost" size="icon">
-              <MoreHorizontalIcon />
+              <DotsHorizontalIcon className="h-4 w-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Chat Options</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Move to Project</DropdownMenuLabel>
-            {projects.length === 0 && (
-              <DropdownMenuItem disabled>
-                <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                Loading projects...
-              </DropdownMenuItem>
+          </PopoverTrigger>
+
+          <PopoverContent className="w-52 p-0">
+            {!showProjects ? (
+              <div className="text-sm font-medium text-center py-2 border-b">
+                Chat Options
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-left px-2 py-1.5 text-sm"
+                  onClick={() => setShowProjects(true)}
+                >
+                  Move to Project
+                </Button>
+              </div>
+            ) : (
+              <Command>
+                <CommandInput placeholder="Search projects..." />
+                <CommandEmpty>No projects found.</CommandEmpty>
+                <CommandGroup>
+                  {projects.map((project) => (
+                    <CommandItem
+                      key={project.id}
+                      value={project.name}
+                      onSelect={() => {
+                        setShowProjects(false)
+                        moveToProject(project.id)
+                      }}
+                    >
+                      {project.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
             )}
-            {projects.map((project) => (
-              <DropdownMenuItem
-                key={project.id}
-                onClick={() => handleMoveChat(project.id)}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <FolderIcon className="h-4 w-4" />
-                  {project.name}
-                </div>
-                {project.id === currentProjectId && <CheckIcon className="h-4 w-4 text-primary" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
-  );
+  )
 }
