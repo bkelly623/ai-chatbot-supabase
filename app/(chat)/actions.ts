@@ -3,9 +3,18 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { nanoid } from 'nanoid';
 
 import { createClient } from '@/lib/supabase/server';
+
+// Function to generate a simple random ID (replacement for nanoid)
+function generateId(length = 16) {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
 // Function to get the current session
 async function getSession() {
@@ -66,7 +75,7 @@ export async function createChat(userId: string, title?: string) {
     throw new Error('Unauthorized to create chat for this user.');
   }
 
-  const id = nanoid();
+  const id = generateId();
 
   const { error } = await supabase.from('chats').insert({
     id,
