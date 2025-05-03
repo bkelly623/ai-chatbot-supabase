@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+
 import { User } from '@supabase/supabase-js';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { FolderIcon, PlusIcon } from '@/components/custom/icons';
@@ -97,4 +98,44 @@ export function SidebarProjects({
       <div className="flex items-center justify-between mb-2 px-4">
         <div className="flex items-center gap-2">
           <FolderIcon className="size-4" />
-          <h2 className="font-semibold">Projects</h2
+          <h2 className="font-semibold">Projects</h2>
+        </div>
+
+        <BetterTooltip content="Create new project">
+          <Button
+            onClick={handleCreateProject}
+            variant="ghost"
+            size="icon"
+            className="size-7"
+          >
+            <PlusIcon className="size-4" />
+            <span className="sr-only">Create new project</span>
+          </Button>
+        </BetterTooltip>
+      </div>
+
+      <Separator className="mb-2" />
+
+      <div className="space-y-1 px-2">
+        {projects.map((project) => (
+          <div
+            key={project.id}
+            className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer flex items-center gap-2 ${
+              localSelectedProjectId === project.id ? 'bg-muted' : ''
+            }`}
+            onClick={() => handleSelectProject(project.id)}
+          >
+            <FolderIcon className="size-4 shrink-0" />
+            <span className="truncate">{project.name}</span>
+          </div>
+        ))}
+
+        {projects.length === 0 && (
+          <div className="px-2 py-1 text-sm text-muted-foreground">
+            No projects yet
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
