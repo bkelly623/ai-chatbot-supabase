@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
@@ -22,7 +22,6 @@ export function SidebarProjects({
   user,
   setSelectedProjectId 
 }: SidebarProjectsProps) {
-  // Fix: Renamed the state variable to match what's used in the JSX
   const [localSelectedProjectId, setLocalSelectedProjectId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
