@@ -1,97 +1,89 @@
-"use client"
+'use client'
 
-import { useRouter } from "next/navigation"
-import { ChatShareDialog } from "@/components/chat-share-dialog"
-import { Button } from "@/components/ui/button"
-import { Chat } from "@/lib/types"
-import { useState } from "react"
-import { DotsHorizontalIcon, PlusIcon } from "@radix-ui/react-icons"
-import { updateChatProject } from "@/app/actions/update-chat-project"
-import { useUserProjects } from "@/lib/hooks/use-user-projects"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command"
+import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { ChatShareButton } from '@/components/chat/chat-share-button'
+import { ChatShareModal } from '@/components/chat/chat-share-modal'
+import { IconNewChat } from '@/components/ui/icons'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { useSidebar } from '@/components/sidebar/use-sidebar'
+import { SidebarToggle } from '@/components/sidebar/sidebar-toggle'
+import { ChatHeaderDropdown } from './chat-header-dropdown'
+import { useChatStore } from '@/lib/stores/chat-store'
+import { type Project } from '@/types/project'
+import { getUserProjects } from '@/lib/queries'
 
 interface ChatHeaderProps {
-  chat: Chat
+  chatId?: string
+  projectId?: string
+  title?: string
 }
 
-export function ChatHeader({ chat }: ChatHeaderProps) {
+export function ChatHeader({ chatId, projectId, title }: ChatHeaderProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true)
+  const { isSidebarOpen } = useSidebar()
   const router = useRouter()
-  const { projects } = useUserProjects()
-  const [showProjects, setShowProjects] = useState(false)
+  const pathname = usePathname()
+  const setSelectedChatId = useChatStore((s) => s.setSelectedChatId)
 
-  const moveToProject = async (projectId: string) => {
-    await updateChatProject(chat.id, projectId)
-    router.refresh()
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const data = await getUserProjects()
+        setProjects(data)
+      } catch (err) {
+        console.error('Failed to load projects', err)
+      } finally {
+        setIsLoadingProjects(false)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
+  const handleNewChat = () => {
+    router.push('/chat/new')
+    setSelectedChatId(null)
   }
 
   return (
-    <div className="flex items-center justify-between border-b px-4 py-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="gap-1 text-sm text-muted-foreground"
-        onClick={() => router.push("/")}
-      >
-        <PlusIcon className="h-4 w-4" />
-        New Chat
-      </Button>
+    <>
+      <div className="flex items-center justify-between h-14 px-4 border-b shrink-0">
+        <div className="flex items-center gap-1">
+          {!isSidebarOpen && <SidebarToggle />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNewChat}
+            className="text-muted-foreground"
+          >
+            <IconNewChat className="h-5 w-5" />
+            <span className="sr-only">New Chat</span>
+          </Button>
+        </div>
 
-      <div className="flex items-center space-x-2">
-        <ChatShareDialog chat={chat} />
-
-        <Popover open={showProjects} onOpenChange={setShowProjects}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-
-          <PopoverContent className="w-52 p-0">
-            {!showProjects ? (
-              <div className="text-sm font-medium text-center py-2 border-b">
-                Chat Options
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-left px-2 py-1.5 text-sm"
-                  onClick={() => setShowProjects(true)}
-                >
-                  Move to Project
-                </Button>
-              </div>
-            ) : (
-              <Command>
-                <CommandInput placeholder="Search projects..." />
-                <CommandEmpty>No projects found.</CommandEmpty>
-                <CommandGroup>
-                  {projects.map((project) => (
-                    <CommandItem
-                      key={project.id}
-                      value={project.name}
-                      onSelect={() => {
-                        setShowProjects(false)
-                        moveToProject(project.id)
-                      }}
-                    >
-                      {project.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            )}
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center space-x-1">
+          {chatId && (
+            <ChatHeaderDropdown
+              chatId={chatId}
+              currentProjectId={projectId}
+              availableProjects={projects}
+              isLoading={isLoadingProjects}
+            />
+          )}
+          <ChatShareButton onClick={() => setShareDialogOpen(true)} />
+        </div>
       </div>
-    </div>
+
+      <ChatShareModal
+        chatId={chatId}
+        title={title}
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+      />
+    </>
   )
 }
