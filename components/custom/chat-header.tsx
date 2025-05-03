@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useMediaQuery } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Command, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import { moveChatToProject } from "@/app/actions/project-actions";
+import { toast } from "sonner";
+import { createClient } from "@/utils/supabase/client";
 
 interface ChatHeaderProps {
   chatId?: string;
@@ -22,18 +30,38 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
 
-  const handleMoveToProject = async () => {
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from("projects").select("id, name");
+      setProjects(data || []);
+    };
+    fetchProjects();
+  }, []);
+
+  const handleMoveToProject = async (projectId: string) => {
     if (!chatId) return;
     setLoading(true);
     try {
-      await moveChatToProject(chatId); // backend logic to be implemented
+      const result = await moveChatToProject(chatId, projectId);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Chat moved to project");
+        router.refresh();
+      }
     } catch (error) {
-      console.error("Failed to move chat to project:", error);
+      toast.error("Failed to move chat.");
+      console.error(error);
     } finally {
       setLoading(false);
+      setOpen(false);
     }
   };
 
@@ -59,9 +87,28 @@ export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleMoveToProject}>
-            Move to Project
-          </DropdownMenuItem>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                Move to Project
+              </DropdownMenuItem>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Select a project..." />
+                <CommandList>
+                  {projects.map((project) => (
+                    <CommandItem
+                      key={project.id}
+                      onSelect={() => handleMoveToProject(project.id)}
+                    >
+                      {project.name}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
