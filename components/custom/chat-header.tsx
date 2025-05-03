@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChatShareButton } from '@/components/chat/chat-share-button'
-import { ChatShareModal } from '@/components/chat/chat-share-modal'
-import { IconNewChat } from '@/components/ui/icons'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { useSidebar } from '@/components/sidebar/use-sidebar'
-import { SidebarToggle } from '@/components/sidebar/sidebar-toggle'
+import { ChatShareButton } from '../chat/chat-share-button'
+import { ChatShareModal } from '../chat/chat-share-modal'
+import { IconNewChat } from '../ui/icons'
+import { Button } from '../ui/button'
+import { cn } from '../../lib/utils'
+import { useSidebar } from '../sidebar/use-sidebar'
+import { SidebarToggle } from '../sidebar/sidebar-toggle'
 import { ChatHeaderDropdown } from './chat-header-dropdown'
-import { useChatStore } from '@/lib/stores/chat-store'
-import { type Project } from '@/types/project'
-import { getUserProjects } from '@/lib/queries'
+import { useChatStore } from '../../lib/stores/chat-store'
+import { type Project } from '../../types/project'
+import { getUserProjects } from '../../lib/queries'
 
 interface ChatHeaderProps {
   chatId?: string
