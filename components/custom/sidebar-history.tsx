@@ -1,11 +1,11 @@
 'use client';
 
-import { User } from '@supabase/supabase-js';
-import { format, isToday, isYesterday } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { format, isToday, isYesterday } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 import {
@@ -269,7 +269,7 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="size-7"
             onClick={() => setClearAllDialogOpen(true)}
           >
             <TrashIcon className="size-4" />
@@ -279,6 +279,4 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
       </div>
 
       {/* Chat list */}
-      <div className="flex-1 overflow-auto px-2">
-        {loading ? (
-          <div className="space-
+      <div
