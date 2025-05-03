@@ -1,590 +1,284 @@
 'use client';
 
 import { User } from '@supabase/supabase-js';
-import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 
-import { updateChatProjectId } from '@/app/(chat)/actions';
-import { 
-  CheckIcon, 
-  FolderIcon, 
-  LoaderIcon, 
-  MoreHorizontalIcon, 
-  TrashIcon 
-} from '@/components/custom/icons';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ClockIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@/components/custom/icons';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { getChatsByUserIdQuery } from '@/db/queries';
-import { createClient } from '@/lib/supabase/client';
-import { Database } from '@/lib/supabase/types';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { BetterTooltip } from '@/components/ui/tooltip';
 
-type Project = Database['public']['Tables']['projects']['Row'];
-// Extended Chat type that includes project_id
-interface Chat {
+interface SidebarHistoryProps {
+  user?: User;
+  activeChat?: string | null;
+}
+
+type ChatItem = {
   id: string;
-  title: string | null;
-  user_id: string;
+  title: string;
   created_at: string;
   updated_at: string;
-  project_id?: string | null;
-}
-
-type GroupedChats = {
-  today: Chat[];
-  yesterday: Chat[];
-  lastWeek: Chat[];
-  lastMonth: Chat[];
-  older: Chat[];
 };
 
-const fetcher = async (): Promise<Chat[]> => {
-  try {
-    const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('Auth error:', userError);
-      return [];
-    }
-
-    const { data: chats, error: chatsError } = await supabase
-      .from('chats')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (chatsError) {
-      console.error('Chats fetch error:', chatsError);
-      return [];
-    }
-
-    return chats || [];
-  } catch (error) {
-    console.error('Fetcher error:', error);
-    return [];
-  }
-};
-
-const ChatItem = ({
-  chat,
-  isActive,
-  onDelete,
-  setOpenMobile,
-  userId,
-}: {
-  chat: Chat;
-  isActive: boolean;
-  onDelete: (chatId: string) => void;
-  setOpenMobile: (open: boolean) => void;
-  userId: string;
-}) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showProjectSelector, setShowProjectSelector] = useState(false);
-  const [projectName, setProjectName] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [filteredChats, setFilteredChats] = useState<ChatItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
+  const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
+  const [chatToRename, setChatToRename] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState<string>('');
+  const [clearAllDialogOpen, setClearAllDialogOpen] = useState<boolean>(false);
 
-  // Load projects directly from supabase when needed
-  const loadProjects = async () => {
-    if (projects.length > 0) return; // Only load once
+  // Fetch chats from API
+  const fetchChats = useCallback(async () => {
+    if (!user) return;
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      setProjects(data || []);
+      const response = await fetch('/api/history');
+      const data = await response.json();
+      setChats(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error loading projects:', error);
-      toast.error('Failed to load projects');
+      console.error('Error fetching chat history:', error);
+      toast.error('Failed to load chat history');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats, pathname]);
+
+  // Filter chats based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredChats(chats);
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = chats.filter((chat) =>
+        chat.title.toLowerCase().includes(term)
+      );
+      setFilteredChats(filtered);
+    }
+  }, [chats, searchTerm]);
+
+  // Group chats by date
+  const groupedChats = useMemo(() => {
+    const groups: Record<string, ChatItem[]> = {
+      Today: [],
+      Yesterday: [],
+      'Previous 7 Days': [],
+      'Previous 30 Days': [],
+      Older: [],
+    };
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+    filteredChats.forEach((chat) => {
+      const chatDate = new Date(chat.updated_at);
+
+      if (isToday(chatDate)) {
+        groups['Today'].push(chat);
+      } else if (isYesterday(chatDate)) {
+        groups['Yesterday'].push(chat);
+      } else if (chatDate >= sevenDaysAgo) {
+        groups['Previous 7 Days'].push(chat);
+      } else if (chatDate >= thirtyDaysAgo) {
+        groups['Previous 30 Days'].push(chat);
+      } else {
+        groups['Older'].push(chat);
+      }
+    });
+
+    // Remove empty groups
+    return Object.entries(groups).filter(([_, chats]) => chats.length > 0);
+  }, [filteredChats]);
+
+  const toggleGroup = (groupName: string) => {
+    setCollapsedGroups((prev) =>
+      prev.includes(groupName)
+        ? prev.filter((g) => g !== groupName)
+        : [...prev, groupName]
+    );
+  };
+
+  const handleClearAllChats = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch(`/api/chats?userId=${user.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clear chats');
+      }
+
+      toast.success('All chats cleared');
+      setChats([]);
+      setClearAllDialogOpen(false);
+      router.push('/');
+    } catch (error) {
+      console.error('Error clearing chats:', error);
+      toast.error('Failed to clear chats');
     }
   };
 
-  // Load project name if this chat is in a project
-  useEffect(() => {
-    const fetchProjectName = async () => {
-      if (!chat.project_id) {
-        setProjectName(null);
-        return;
-      }
-      
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('projects')
-          .select('name')
-          .eq('id', chat.project_id)
-          .single();
-          
-        if (error) throw error;
-        setProjectName(data?.name || 'Project');
-      } catch (error) {
-        console.error('Error fetching project name:', error);
-        setProjectName('Project');
-      }
-    };
-    
-    fetchProjectName();
-  }, [chat.project_id]);
-  
-  // Reset project selector when dropdown is closed
-  useEffect(() => {
-    if (!isDropdownOpen) {
-      setShowProjectSelector(false);
-    }
-  }, [isDropdownOpen]);
-
-  // Handle moving a chat to a project
-  const handleMoveToProject = async (projectId: string | null) => {
+  const handleDeleteChat = async (chatId: string) => {
     try {
-      // Call the server action to update the chat's project
-      await updateChatProjectId(chat.id, projectId);
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete chat');
+      }
+
+      toast.success('Chat deleted');
       
-      toast.success(
-        projectId 
-          ? 'Chat moved to project' 
-          : 'Chat removed from project'
+      // Remove the chat from state
+      setChats((prevChats) => 
+        prevChats.filter((chat) => chat.id !== chatId)
       );
       
-      // Refresh the data
-      router.refresh();
+      // If we're viewing the chat that was deleted, navigate home
+      if (pathname.includes(`/chat/${chatId}`)) {
+        router.push('/');
+      }
     } catch (error) {
-      console.error('Error moving chat to project:', error);
-      toast.error('Failed to move chat');
-    } finally {
-      setShowProjectSelector(false);
-      setIsDropdownOpen(false);
-    }
-  };
-  
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <div className="flex flex-col">
-            <span>{chat.title || 'New Chat'}</span>
-            {chat.project_id && projectName && (
-              <span className="text-xs text-sidebar-foreground/50">
-                In {projectName}
-              </span>
-            )}
-          </div>
-        </Link>
-      </SidebarMenuButton>
-      <DropdownMenu 
-        modal={true} 
-        open={isDropdownOpen} 
-        onOpenChange={setIsDropdownOpen}
-      >
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuAction
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
-            showOnHover={!isActive}
-          >
-            <MoreHorizontalIcon />
-            <span className="sr-only">More</span>
-          </SidebarMenuAction>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="bottom" align="end">
-          {!showProjectSelector ? (
-            <>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onSelect={(e) => {
-                  // Prevent default onSelect behavior which closes the dropdown
-                  e.preventDefault();
-                  loadProjects();
-                  setShowProjectSelector(true);
-                }}
-              >
-                <FolderIcon className="h-4 w-4" />
-                <span>Move to project</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-                onSelect={() => onDelete(chat.id)}
-              >
-                <TrashIcon className="h-4 w-4" />
-                <span>Delete</span>
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              <DropdownMenuLabel>Select a project</DropdownMenuLabel>
-              {isLoading ? (
-                <DropdownMenuItem disabled>
-                  <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
-                  <span>Loading projects...</span>
-                </DropdownMenuItem>
-              ) : (
-                <>
-                  <DropdownMenuItem 
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleMoveToProject(null);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <span>Remove from project</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {projects.length === 0 ? (
-                    <DropdownMenuItem disabled>
-                      <span>No projects found</span>
-                    </DropdownMenuItem>
-                  ) : (
-                    projects.map((project) => (
-                      <DropdownMenuItem
-                        key={project.id}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          handleMoveToProject(project.id);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <span>{project.name}</span>
-                        {chat.project_id === project.id && (
-                          <CheckIcon className="ml-auto h-4 w-4" />
-                        )}
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowProjectSelector(false);
-                }}
-                className="cursor-pointer"
-              >
-                <span>Cancel</span>
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </SidebarMenuItem>
-  );
-};
-
-export function SidebarHistory({ user }: { user: User | undefined }) {
-  const { setOpenMobile } = useSidebar();
-  const { id } = useParams();
-  const pathname = usePathname();
-  const {
-    data: history,
-    isLoading,
-    mutate,
-  } = useSWR<Chat[]>(user ? ['chats', user.id] : null, fetcher, {
-    fallbackData: [],
-    refreshInterval: 5000, // Optional: refresh every 5 seconds
-    revalidateOnFocus: true,
-  });
-
-  useEffect(() => {
-    mutate();
-  }, [pathname, mutate]);
-
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const router = useRouter();
-  const handleDelete = async () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: 'DELETE',
-    });
-
-    toast.promise(deletePromise, {
-      loading: 'Deleting chat...',
-      success: () => {
-        mutate((history) => {
-          if (history) {
-            return history.filter((h) => h.id !== id);
-          }
-        });
-        return 'Chat deleted successfully';
-      },
-      error: 'Failed to delete chat',
-    });
-
-    setShowDeleteDialog(false);
-
-    if (deleteId === id) {
-      router.push('/');
+      console.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat');
     }
   };
 
-  if (!user) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <div className="text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            <div>Login to save and revisit previous chats!</div>
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
-  }
+  const handleRenameChat = async () => {
+    if (!chatToRename || !newTitle.trim()) return;
 
-  if (isLoading) {
-    return (
-      <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
-          Today
-        </div>
-        <SidebarGroupContent>
-          <div className="flex flex-col">
-            {[44, 32, 28, 64, 52].map((item) => (
-              <div
-                key={item}
-                className="rounded-md h-8 flex gap-2 px-2 items-center"
-              >
-                <div
-                  className="h-4 rounded-md flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
-                  style={
-                    {
-                      '--skeleton-width': `${item}%`,
-                    } as React.CSSProperties
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
-  }
+    try {
+      const response = await fetch(`/api/chats/${chatToRename}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: newTitle }),
+      });
 
-  if (history?.length === 0) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <div className="text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            <div>
-              Your conversations will appear here once you start chatting!
-            </div>
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
-  }
+      if (!response.ok) {
+        throw new Error('Failed to rename chat');
+      }
 
-  const groupChatsByDate = (chats: Chat[]): GroupedChats => {
-    const now = new Date();
-    const oneWeekAgo = subWeeks(now, 1);
-    const oneMonthAgo = subMonths(now, 1);
+      toast.success('Chat renamed');
+      
+      // Update the chat in state
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === chatToRename
+            ? { ...chat, title: newTitle }
+            : chat
+        )
+      );
+      
+      // Reset state
+      setChatToRename(null);
+      setNewTitle('');
+      setRenameDialogOpen(false);
+    } catch (error) {
+      console.error('Error renaming chat:', error);
+      toast.error('Failed to rename chat');
+    }
+  };
 
-    return chats.reduce(
-      (groups, chat) => {
-        const chatDate = new Date(chat.created_at);
-
-        if (isToday(chatDate)) {
-          groups.today.push(chat);
-        } else if (isYesterday(chatDate)) {
-          groups.yesterday.push(chat);
-        } else if (chatDate > oneWeekAgo) {
-          groups.lastWeek.push(chat);
-        } else if (chatDate > oneMonthAgo) {
-          groups.lastMonth.push(chat);
-        } else {
-          groups.older.push(chat);
-        }
-
-        return groups;
-      },
-      {
-        today: [],
-        yesterday: [],
-        lastWeek: [],
-        lastMonth: [],
-        older: [],
-      } as GroupedChats
-    );
+  const openRenameDialog = (chatId: string, currentTitle: string) => {
+    setChatToRename(chatId);
+    setNewTitle(currentTitle);
+    setRenameDialogOpen(true);
   };
 
   return (
-    <>
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {history &&
-              (() => {
-                const groupedChats = groupChatsByDate(history);
-
-                return (
-                  <>
-                    {groupedChats.today.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
-                          Today
-                        </div>
-                        {groupedChats.today.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                            userId={user.id}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.yesterday.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Yesterday
-                        </div>
-                        {groupedChats.yesterday.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                            userId={user.id}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.lastWeek.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 7 days
-                        </div>
-                        {groupedChats.lastWeek.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                            userId={user.id}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.lastMonth.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 30 days
-                        </div>
-                        {groupedChats.lastMonth.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                            userId={user.id}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedChats.older.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Older
-                        </div>
-                        {groupedChats.older.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                            userId={user.id}
-                          />
-                        ))}
-                      </>
-                    )}
-                  </>
-                );
-              })()}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              chat and remove it from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={handleDelete}
+    <div className="flex flex-col h-full">
+      {/* Search input */}
+      <div className="px-4 py-2">
+        <div className="relative">
+          <Input
+            placeholder="Search chats..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full"
+              onClick={() => setSearchTerm('')}
             >
-              Delete chat
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
+              <span className="sr-only">Clear search</span>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="size-4">
+                <path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
+              </svg>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* History title with clear all button */}
+      <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center">
+          <ClockIcon className="mr-2 size-4" />
+          <h2 className="text-sm font-semibold">Chat History</h2>
+        </div>
+        {chats.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setClearAllDialogOpen(true)}
+          >
+            <TrashIcon className="size-4" />
+            <span className="sr-only">Clear history</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Chat list */}
+      <div className="flex-1 overflow-auto px-2">
+        {loading ? (
+          <div className="space-
