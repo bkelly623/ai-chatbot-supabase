@@ -1,13 +1,10 @@
 import { experimental_StreamData } from 'ai';
 import { StreamingTextResponse } from 'ai';
-import { NextResponse } from 'next/server';
 
 import { generateTitleFromUserMessage } from '../../actions';
 import { createClient } from '@/lib/supabase/server';
 
-export const maxDuration = 300;
-
-// Custom ID generator function
+// Function to generate a simple random ID
 function generateId(length = 16) {
   const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -16,6 +13,8 @@ function generateId(length = 16) {
   }
   return result;
 }
+
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
     const json = await req.json();
@@ -94,10 +93,7 @@ export async function POST(req: Request) {
             return new Response('Error saving message', { status: 500 });
         }
 
-        // The rest of your model response code
-        // ...
-
-        // Example simplified response (replace with your actual model code)
+        // Example simplified response
         const data = new experimental_StreamData();
         const stream = new ReadableStream({
             start(controller) {
