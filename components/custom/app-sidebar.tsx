@@ -7,7 +7,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { BotIcon, PlusIcon } from '@/components/custom/icons';
 import { SidebarHistory } from '@/components/custom/sidebar-history';
-import SidebarProjects, { SidebarProjectsProps } from '@/components/custom/sidebar-projects';
+import { SidebarProjects } from '@/components/custom/sidebar-projects'; // Changed to named import
 import { SidebarUserNav } from '@/components/custom/sidebar-user-nav';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,7 +88,7 @@ export function AppSidebar({ user }: { user: User | null }) {
                     <SidebarGroupContent>
                         <SidebarProjects
                             user={safeUser}
-                            {...({ setSelectedProjectId } as any)}
+                            setSelectedProjectId={setSelectedProjectId}
                         />
                     </SidebarGroupContent>
                 </SidebarGroup>
