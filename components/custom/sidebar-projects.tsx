@@ -1,130 +1,230 @@
 'use client';
 
-/* eslint-disable import/order */
-import { Plus } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import React, { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-import CreateProjectModal from '@/components/custom/createprojectmodal';
+import {
+  FolderIcon,
+  PlusIcon,
+  MoreHorizontalIcon,
+} from '@/components/custom/icons';
+import { BetterTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
-import { FolderIcon } from '@/components/custom/icons';
-/* eslint-enable import/order */
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
-export interface SidebarProjectsProps {
-  user?: User | undefined;
-  setSelectedProjectId?: (id: string | null) => void;
-}
+const FormSchema = z.object({
+  name: z.string().min(1, 'Project name is required').max(100),
+});
 
-export default function SidebarProjects(props: SidebarProjectsProps) {
-  const { user, setSelectedProjectId } = props;
-  const [projects, setProjects] = useState<any[]>([]);
-  const [selectedProjectId, setSelectedProjectIdLocal] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false);
-  const supabase = createClient();
+export function SidebarProjects({ projects = [] }) {
+  const [newProject, setNewProject] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
-
-  const fetchProjects = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      let query = supabase.from('projects').select('*').order('created_at', {
-        ascending: false
-      });
-
-      if (user?.id) {
-        query = query.eq('user_id', user.id);
-      }
-
-      const {
-        data,
-        error
-      } = await query;
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setProjects(data || []);
-      }
-    } catch (e) {
-      setError('An unexpected error occurred.');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
-
+  const searchParams = useSearchParams();
+  
+  // Get projectId from search params
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
-
-  // Extract project ID from pathname if on a project page
-  useEffect(() => {
-    if (pathname.startsWith('/projects/')) {
-      const projectId = pathname.split('/')[2];
-      setSelectedProjectIdLocal(projectId);
-      if (setSelectedProjectId) {
-        setSelectedProjectId(projectId);
-      }
-    } else {
-      setSelectedProjectIdLocal(null);
-    }
-  }, [pathname, setSelectedProjectId]);
-
-  const handleSelectProject = (projectId: string) => {
-    setSelectedProjectIdLocal(projectId);
-    if (setSelectedProjectId) {
+    const projectId = searchParams.get('projectId');
+    if (projectId) {
       setSelectedProjectId(projectId);
     }
-    
-    // Instead of setting a query parameter, navigate to the project page
-    router.push(`/projects/${projectId}`);
-  };
+  }, [searchParams]);
 
-  const handleCloseCreateProjectModal = () => {
-    setShowCreateProjectModal(false);
-    // Refresh the projects list after creating a new project
-    fetchProjects();
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      name: '',
+    },
+  });
+
+  const handleSelectProject = useCallback((projectId: string) => {
+    setSelectedProjectId(projectId);
+    router.push(`/projects/${projectId}`);
+  }, [router]);
+
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    try {
+      // Create project
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create project');
+      }
+
+      const project = await response.json();
+      toast.success('Project created successfully');
+      setNewProject(false);
+      form.reset();
+      
+      // Navigate to the new project
+      router.push(`/projects/${project.id}`);
+      router.refresh();
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Failed to create project');
+    }
   };
 
   return (
-    <div className="p-2 space-y-2">
-      <h2 className="text-sm font-semibold text-muted-foreground flex items-center justify-between">
-        Projects
-        <Button variant="ghost" size="sm" onClick={() => setShowCreateProjectModal(true)}>
-          + New Project
-        </Button>
-      </h2>
+    <div className="py-4">
+      <div className="flex items-center justify-between mb-2 px-4">
+        <div className="flex items-center gap-2">
+          <FolderIcon className="w-4 h-4" />
+          <h2 className="font-semibold">Projects</h2>
+        </div>
 
-      {loading && <div className="animate-pulse bg-muted/50 h-8 w-full rounded-md">
-        {/* Placeholder while loading */}
-      </div>}
+        <BetterTooltip content="Create new project">
+          <Button
+            onClick={() => setNewProject(true)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span className="sr-only">Create new project</span>
+          </Button>
+        </BetterTooltip>
+      </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <Separator className="mb-2" />
 
-      <div className="space-y-1">
-        {projects.map(project => (
+      <div className="space-y-1 px-2">
+        {projects.map((project) => (
           <div
             key={project.id}
             className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer flex items-center gap-2 ${
-              selectedProjectIdLocal === project.id ? 'bg-muted' : ''
+              selectedProjectId === project.id ? 'bg-muted' : ''
             }`}
             onClick={() => handleSelectProject(project.id)}
           >
-            <FolderIcon className="size-4" />
-            {project.name}
+            <FolderIcon className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{project.name}</span>
+            
+            <div className="flex-1" />
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-auto opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <MoreHorizontalIcon className="h-4 w-4" />
+                  <span className="sr-only">Project options</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle rename (to be implemented)
+                    toast.info('Rename feature coming soon');
+                  }}
+                >
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle delete (to be implemented)
+                    toast.info('Delete feature coming soon');
+                  }}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ))}
+
+        {projects.length === 0 && (
+          <div className="px-2 py-1 text-sm text-muted-foreground">
+            No projects yet
+          </div>
+        )}
       </div>
 
-      {/* Conditionally render the CreateProjectModal */}
-      <CreateProjectModal open={showCreateProjectModal} onClose={handleCloseCreateProjectModal} />
+      {/* Create project dialog */}
+      <Dialog open={newProject} onOpenChange={setNewProject}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create new project</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter project name..."
+                        {...field}
+                        autoFocus
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setNewProject(false);
+                    form.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Create</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
