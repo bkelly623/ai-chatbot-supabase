@@ -1,37 +1,30 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getSession, getSuggestionsByDocumentId } from '@/db/cached-queries';
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
   const documentId = searchParams.get('documentId');
 
   if (!documentId) {
-    return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
+    return new Response('Not Found', { status: 404 });
   }
 
-  try {
-    const supabase = await createClient();
-    const { data: sessionData } = await supabase.auth.getSession();
+  const user = await getSession();
 
-    if (!sessionData?.session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get suggestions data directly
-    const { data: suggestions, error } = await supabase
-      .from('suggestions')
-      .select('*')
-      .eq('document_id', documentId);
-      
-    if (error) {
-      console.error('Error fetching suggestions:', error);
-      return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });
-    }
-
-    // Return the suggestions array
-    return NextResponse.json(suggestions || [], { status: 200 });
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  if (!user) {
+    return new Response('Unauthorized', { status: 401 });
   }
+
+  const suggestions = await getSuggestionsByDocumentId(documentId);
+
+  const [suggestion] = suggestions;
+
+  if (!suggestion) {
+    return Response.json([], { status: 200 });
+  }
+
+  if (suggestion.user_id !== user.id) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  return Response.json(suggestions, { status: 200 });
 }
