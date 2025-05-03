@@ -1,13 +1,21 @@
 import { experimental_StreamData } from 'ai';
-import { ReplicateStream, StreamingTextResponse } from 'ai';
+import { StreamingTextResponse } from 'ai';
 import { NextResponse } from 'next/server';
-import Replicate from 'replicate';
 
 import { generateTitleFromUserMessage } from '../../actions';
 import { createClient } from '@/lib/supabase/server';
-import { nanoid } from 'nanoid';
 
 export const maxDuration = 300;
+
+// Custom ID generator function
+function generateId(length = 16) {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
 export async function POST(req: Request) {
     const json = await req.json();
@@ -35,7 +43,7 @@ export async function POST(req: Request) {
         // Generate a new ID if needed
         let id = chatId;
         if (!id) {
-            id = nanoid();
+            id = generateId();
         }
 
         // Handle chat retrieval and validation safely
@@ -72,7 +80,7 @@ export async function POST(req: Request) {
         }
 
         // Save the message
-        const messageId = nanoid();
+        const messageId = generateId();
         const { error: messageError } = await supabase.from('messages').insert({
             id: messageId,
             chat_id: id,
