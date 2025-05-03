@@ -4,19 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { EllipsisVertical } from 'lucide-react';
 
-import { Button } from '../custom/button';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '../custom/popover';
+} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-} from '../custom/command';
+} from '@/components/ui/command';
 
 import { Database } from '@/types/supabase';
 import { moveChatToProject } from '@/app/actions/project-actions';
