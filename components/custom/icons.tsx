@@ -1,10 +1,12 @@
 import {
   ArrowUp as ArrowUpIcon,
+  Check as CheckIcon, // Added for project selection
   CheckCircle as CheckCirclFillIcon,
   ChevronDown as ChevronDownIcon,
   Copy as CopyIcon,
   File as FileIcon,
   FileCheck as FileCheckIcon,
+  Folder as FolderIcon, // Added for "Move to Project" option
   Loader as LoaderIcon,
   MessageSquare as MessageIcon,
   MoreHorizontal as MoreHorizontalIcon,
@@ -142,11 +144,13 @@ export {
   ArrowUpIcon,
   BotIcon,
   CheckCirclFillIcon,
+  CheckIcon, // Added for project selection
   ChevronDownIcon,
   CopyIcon,
   CrossIcon,
   DeltaIcon,
   FileIcon,
+  FolderIcon, // Added for "Move to Project" option
   LoaderIcon,
   MessageIcon,
   MoreHorizontalIcon,
