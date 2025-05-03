@@ -1,7 +1,7 @@
-import { experimental_StreamData } from 'ai';
-import { StreamingTextResponse } from 'ai';
+import { StreamingTextResponse, experimental_StreamData } from 'ai';
 
 import { generateTitleFromUserMessage } from '../../actions';
+
 import { createClient } from '@/lib/supabase/server';
 
 // Function to generate a simple random ID
