@@ -6,6 +6,27 @@ import { z } from 'zod';
 
 import { createClient } from '@/lib/supabase/server';
 
+// Add the saveModelId function
+export async function saveModelId(modelId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error('Unauthorized');
+  }
+
+  const { error } = await supabase
+    .from('users')
+    .update({ model_id: modelId })
+    .eq('id', user.id);
+
+  if (error) {
+    throw new Error('Failed to save model preference');
+  }
+
+  revalidatePath('/');
+}
+
 // Function to generate a simple random ID (replacement for nanoid)
 function generateId(length = 16) {
   const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
