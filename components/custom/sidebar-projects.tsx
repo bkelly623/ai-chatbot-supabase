@@ -1,9 +1,8 @@
 'use client';
 
+import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-import { User } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
