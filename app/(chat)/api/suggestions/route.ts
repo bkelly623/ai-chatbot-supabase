@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-
-import { getSuggestionsByDocumentId } from '@/db/queries';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req: Request) {
@@ -19,7 +17,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get suggestions data - this returns an object with a data property, not an array directly
+    // Get suggestions data directly
     const { data: suggestions, error } = await supabase
       .from('suggestions')
       .select('*')
