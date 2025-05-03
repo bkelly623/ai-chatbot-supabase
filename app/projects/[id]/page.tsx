@@ -1,7 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { ProjectHeader } from '@/components/custom/project-header';
+
 import { ProjectChatList } from '@/components/custom/project-chat-list';
+import { ProjectHeader } from '@/components/custom/project-header';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function ProjectPage({
   params,
