@@ -1,116 +1,87 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useMediaQuery } from "usehooks-ts";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { EllipsisVertical } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Command, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { EllipsisVertical } from "lucide-react";
-import { moveChatToProject } from "@/app/actions/project-actions";
-import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
+import { Database } from '@/types/supabase';
+import { createClient } from '@/utils/supabase/client';
+import { moveChatToProject } from '@/app/actions/project-actions';
 
 interface ChatHeaderProps {
   chatId?: string;
-  isDisabled?: boolean;
+  userId?: string;
+  userProjects?: Database['public']['Tables']['projects']['Row'][];
 }
 
-export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+export function ChatHeader({ chatId, userId, userProjects }: ChatHeaderProps) {
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.from("projects").select("id, name");
-      setProjects(data || []);
-    };
-    fetchProjects();
-  }, []);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleMoveToProject = async (projectId: string) => {
     if (!chatId) return;
+
     setLoading(true);
     try {
-      const result = await moveChatToProject(chatId, projectId);
-      if (result?.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Chat moved to project");
-        router.refresh();
-      }
+      await moveChatToProject(chatId, projectId);
+      router.refresh();
     } catch (error) {
-      toast.error("Failed to move chat.");
-      console.error(error);
+      console.error('Failed to move chat to project:', error);
     } finally {
       setLoading(false);
       setOpen(false);
     }
   };
 
-  const shouldHideToggle =
-    !chatId || pathname === "/" || pathname === "/chat/new";
-
-  if (shouldHideToggle) return null;
-
   return (
-    <div className="ml-2 flex items-center">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "h-8 w-8 p-0",
-              isDisabled || loading ? "opacity-50 cursor-not-allowed" : ""
-            )}
-            disabled={isDisabled || loading}
-            aria-label="Chat menu"
-          >
-            <EllipsisVertical className="size-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                Move to Project
-              </DropdownMenuItem>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="end">
-              <Command>
-                <CommandInput placeholder="Select a project..." />
-                <CommandList>
-                  {projects.map((project) => (
-                    <CommandItem
-                      key={project.id}
-                      onSelect={() => handleMoveToProject(project.id)}
-                    >
-                      {project.name}
-                    </CommandItem>
-                  ))}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center justify-between border-b px-4 py-2">
+      <div className="text-lg font-semibold">Chat</div>
+      {chatId && userProjects?.length ? (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              disabled={loading}
+            >
+              <EllipsisVertical className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0">
+            <Command>
+              <CommandInput placeholder="Select project..." />
+              <CommandEmpty>No projects found.</CommandEmpty>
+              <CommandGroup heading="Projects">
+                {userProjects.map((project) => (
+                  <CommandItem
+                    key={project.id}
+                    value={project.name}
+                    onSelect={() => handleMoveToProject(project.id)}
+                  >
+                    {project.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      ) : null}
     </div>
   );
 }
