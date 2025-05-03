@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { useWindowSize } from 'usehooks-ts';
 
 import { updateChatProjectId } from '@/app/(chat)/actions';
-import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { 
   CheckIcon, 
   FolderIcon, 
@@ -16,6 +15,7 @@ import {
   PlusIcon, 
   VercelIcon 
 } from '@/components/custom/icons';
+import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -193,9 +193,9 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 order-3"
+              className="size-8 order-3"
             >
-              <MoreHorizontalIcon className="h-4 w-4" />
+              <MoreHorizontalIcon className="size-4" />
               <span className="sr-only">Chat options</span>
             </Button>
           </DropdownMenuTrigger>
@@ -209,7 +209,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                     setShowProjectSelector(true);
                   }}
                 >
-                  <FolderIcon className="h-4 w-4 mr-2" />
+                  <FolderIcon className="size-4 mr-2" />
                   <span>Move to project</span>
                 </DropdownMenuItem>
                 {currentProjectId && (
@@ -219,7 +219,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                       handleMoveToProject(null);
                     }}
                   >
-                    <FolderIcon className="h-4 w-4 mr-2 text-destructive" />
+                    <FolderIcon className="size-4 mr-2 text-destructive" />
                     <span className="text-destructive">Remove from project</span>
                   </DropdownMenuItem>
                 )}
@@ -231,7 +231,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                 </DropdownMenuLabel>
                 {isLoading ? (
                   <DropdownMenuItem disabled>
-                    <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
+                    <LoaderIcon className="size-4 animate-spin mr-2" />
                     <span>Loading projects...</span>
                   </DropdownMenuItem>
                 ) : (
@@ -260,7 +260,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                         >
                           <span>{project.name}</span>
                           {currentProjectId === project.id && (
-                            <CheckIcon className="ml-auto h-4 w-4" />
+                            <CheckIcon className="ml-auto size-4" />
                           )}
                         </DropdownMenuItem>
                       ))
