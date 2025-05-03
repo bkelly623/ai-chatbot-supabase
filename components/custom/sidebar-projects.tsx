@@ -1,5 +1,6 @@
 'use client';
 
+import { User } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -13,8 +14,18 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BetterTooltip } from '@/components/ui/tooltip';
 
-export function SidebarProjects({ projects = [] }) {
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+interface SidebarProjectsProps {
+  projects?: any[];
+  user?: User;
+  setSelectedProjectId?: (id: string | null) => void;
+}
+
+export function SidebarProjects({ 
+  projects = [], 
+  user,
+  setSelectedProjectId 
+}: SidebarProjectsProps) {
+  const [selectedProjectId, setSelectedProjectIdLocal] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -22,14 +33,20 @@ export function SidebarProjects({ projects = [] }) {
   useEffect(() => {
     const projectId = searchParams.get('projectId');
     if (projectId) {
-      setSelectedProjectId(projectId);
+      setSelectedProjectIdLocal(projectId);
+      if (setSelectedProjectId) {
+        setSelectedProjectId(projectId);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, setSelectedProjectId]);
 
   const handleSelectProject = useCallback((projectId: string) => {
-    setSelectedProjectId(projectId);
+    setSelectedProjectIdLocal(projectId);
+    if (setSelectedProjectId) {
+      setSelectedProjectId(projectId);
+    }
     router.push(`/projects/${projectId}`);
-  }, [router]);
+  }, [router, setSelectedProjectId]);
 
   const handleCreateProject = useCallback(() => {
     // Simple prompt for project name instead of using a modal
@@ -64,6 +81,20 @@ export function SidebarProjects({ projects = [] }) {
       });
   }, [router]);
 
+  // When no projects are passed, fetch them from the API
+  useEffect(() => {
+    if (projects.length === 0 && user) {
+      fetch('/api/projects')
+        .then(response => response.json())
+        .then(data => {
+          // Handle projects if needed
+        })
+        .catch(error => {
+          console.error('Error fetching projects:', error);
+        });
+    }
+  }, [projects, user]);
+
   return (
     <div className="py-4">
       <div className="flex items-center justify-between mb-2 px-4">
@@ -92,7 +123,7 @@ export function SidebarProjects({ projects = [] }) {
           <div
             key={project.id}
             className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer flex items-center gap-2 ${
-              selectedProjectId === project.id ? 'bg-muted' : ''
+              selectedProjectIdLocal === project.id ? 'bg-muted' : ''
             }`}
             onClick={() => handleSelectProject(project.id)}
           >
