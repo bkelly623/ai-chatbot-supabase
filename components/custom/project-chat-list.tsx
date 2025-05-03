@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+
 import { format } from 'date-fns';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +34,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
 
 interface ProjectChatListProps {
   chats: any[];
