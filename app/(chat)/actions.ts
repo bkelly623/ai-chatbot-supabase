@@ -3,9 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { nanoid } from 'nanoid';
 
 import { createClient } from '@/lib/supabase/server';
-import { nanoid } from '@/lib/utils';
 
 // Function to get the current session
 async function getSession() {
@@ -250,4 +250,17 @@ export async function shareAction(formData: FormData) {
 
   revalidatePath(`/share/${id}`);
   return redirect(`/share/${id}`);
+}
+
+// Missing function for the route.ts file
+export async function generateTitleFromUserMessage(message: string): Promise<string> {
+  // Simple implementation - take first few words or characters
+  const maxLength = 30;
+  let title = message.trim().split(' ').slice(0, 5).join(' ');
+  
+  if (title.length > maxLength) {
+    title = title.substring(0, maxLength) + '...';
+  }
+  
+  return title || 'New Chat';
 }
