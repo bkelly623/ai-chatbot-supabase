@@ -1,4 +1,4 @@
-import { StreamingTextResponse, experimental_StreamData } from 'ai';
+import { experimental_StreamData, StreamingTextResponse } from 'ai';
 
 import { generateTitleFromUserMessage } from '../../actions';
 
