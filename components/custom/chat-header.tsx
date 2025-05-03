@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
-import { moveChatToProject } from "@/actions/move-chat-to-project";
+import { moveChatToProject } from "@/app/actions/project-actions";
 
 interface ChatHeaderProps {
   chatId?: string;
@@ -29,8 +29,7 @@ export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
     if (!chatId) return;
     setLoading(true);
     try {
-      await moveChatToProject(chatId);
-      // You can add logic here if you want to update the UI
+      await moveChatToProject(chatId); // backend logic to be implemented
     } catch (error) {
       console.error("Failed to move chat to project:", error);
     } finally {
@@ -38,7 +37,6 @@ export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
     }
   };
 
-  // Hide toggle on home screen or new chat creation screen
   const shouldHideToggle =
     !chatId || pathname === "/" || pathname === "/chat/new";
 
