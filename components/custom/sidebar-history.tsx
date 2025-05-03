@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { format, isToday, isYesterday } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 import {
@@ -13,18 +12,9 @@ import {
   ChevronUpIcon,
   ClockIcon,
   MoreHorizontalIcon,
-  PlusIcon,
   TrashIcon,
 } from '@/components/custom/icons';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +25,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BetterTooltip } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface SidebarHistoryProps {
   user?: User;
@@ -57,10 +57,9 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
   const [filteredChats, setFilteredChats] = useState<ChatItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
-  const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
   const [chatToRename, setChatToRename] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState<string>('');
-  const [clearAllDialogOpen, setClearAllDialogOpen] = useState<boolean>(false);
+  const [renameInputVisible, setRenameInputVisible] = useState<boolean>(false);
 
   // Fetch chats from API
   const fetchChats = useCallback(async () => {
@@ -154,7 +153,6 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
 
       toast.success('All chats cleared');
       setChats([]);
-      setClearAllDialogOpen(false);
       router.push('/');
     } catch (error) {
       console.error('Error clearing chats:', error);
@@ -190,7 +188,10 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
   };
 
   const handleRenameChat = async () => {
-    if (!chatToRename || !newTitle.trim()) return;
+    if (!chatToRename || !newTitle.trim()) {
+      setRenameInputVisible(false);
+      return;
+    }
 
     try {
       const response = await fetch(`/api/chats/${chatToRename}`, {
@@ -219,201 +220,22 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
       // Reset state
       setChatToRename(null);
       setNewTitle('');
-      setRenameDialogOpen(false);
+      setRenameInputVisible(false);
     } catch (error) {
       console.error('Error renaming chat:', error);
       toast.error('Failed to rename chat');
     }
   };
 
-  const openRenameDialog = (chatId: string, currentTitle: string) => {
+  const startRenameChat = (chatId: string, currentTitle: string) => {
     setChatToRename(chatId);
     setNewTitle(currentTitle);
-    setRenameDialogOpen(true);
+    setRenameInputVisible(true);
   };
-
-  // JSX for the chat list section
-  const renderChatList = () => {
-    if (loading) {
-      return (
-        <div className="space-y-2 p-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full" />
-          ))}
-        </div>
-      );
-    }
-
-    if (filteredChats.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-          <p className="mb-2">No chats found</p>
-          {searchTerm ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchTerm('')}
-            >
-              Clear search
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/')}
-            >
-              Start a new chat
-            </Button>
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {groupedChats.map(([group, chats]) => (
-          <div key={group}>
-            <div
-              className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
-              onClick={() => toggleGroup(group)}
-            >
-              <span>{group}</span>
-              {collapsedGroups.includes(group) ? (
-                <ChevronDownIcon className="size-4" />
-              ) : (
-                <ChevronUpIcon className="size-4" />
-              )}
-            </div>
-            <AnimatePresence initial={false}>
-              {!collapsedGroups.includes(group) && (
-                <motion.div
-                  key={group}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1 pl-2">
-                    {chats.map((chat) => (
-                      <div
-                        key={chat.id}
-                        className={`group flex items-center justify-between rounded px-2 py-1 text-sm ${
-                          chat.id === activeChat
-                            ? 'bg-accent'
-                            : 'hover:bg-muted'
-                        }`}
-                      >
-                        <Link
-                          href={`/chat/${chat.id}`}
-                          className="flex-1 truncate"
-                        >
-                          {chat.title || 'New Chat'}
-                        </Link>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                            >
-                              <MoreHorizontalIcon className="size-4" />
-                              <span className="sr-only">
-                                More options
-                              </span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                openRenameDialog(
-                                  chat.id,
-                                  chat.title
-                                )
-                              }
-                            >
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteChat(chat.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // JSX for dialogs
-  const renderDialogs = () => (
-    <>
-      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename chat</DialogTitle>
-            <DialogDescription>
-              Enter a new name for this chat.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            placeholder="Chat name"
-            className="mt-4"
-            autoFocus
-          />
-          <DialogFooter className="mt-4">
-            <Button
-              variant="secondary"
-              onClick={() => setRenameDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleRenameChat}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={clearAllDialogOpen} onOpenChange={setClearAllDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Clear chat history</DialogTitle>
-            <DialogDescription>
-              This will permanently delete all your chats. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button
-              variant="secondary"
-              onClick={() => setClearAllDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleClearAllChats}
-            >
-              Clear all
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
 
   return (
     <div className="flex flex-col h-full">
+      {/* Search input */}
       <div className="px-4 py-2">
         <div className="relative">
           <Input
@@ -438,29 +260,190 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
         </div>
       </div>
 
+      {/* History title with clear all button */}
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center">
           <ClockIcon className="mr-2 size-4" />
           <h2 className="text-sm font-semibold">Chat History</h2>
         </div>
         {chats.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => setClearAllDialogOpen(true)}
-          >
-            <TrashIcon className="size-4" />
-            <span className="sr-only">Clear history</span>
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+              >
+                <TrashIcon className="size-4" />
+                <span className="sr-only">Clear history</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear chat history</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all your chats. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleClearAllChats}
+                >
+                  Clear all
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
+      {/* Chat list */}
       <div className="flex-1 overflow-auto px-2">
-        {renderChatList()}
+        {loading ? (
+          <div className="space-y-2 p-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        ) : filteredChats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+            <p className="mb-2">No chats found</p>
+            {searchTerm ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchTerm('')}
+              >
+                Clear search
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/')}
+              >
+                Start a new chat
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groupedChats.map(([group, chats]) => (
+              <div key={group}>
+                <div
+                  className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
+                  onClick={() => toggleGroup(group)}
+                >
+                  <span>{group}</span>
+                  {collapsedGroups.includes(group) ? (
+                    <ChevronDownIcon className="size-4" />
+                  ) : (
+                    <ChevronUpIcon className="size-4" />
+                  )}
+                </div>
+                {!collapsedGroups.includes(group) && (
+                  <div className="space-y-1 pl-2">
+                    {chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        className={`group flex items-center justify-between rounded px-2 py-1 text-sm ${
+                          chat.id === activeChat
+                            ? 'bg-accent'
+                            : 'hover:bg-muted'
+                        }`}
+                      >
+                        {renameInputVisible && chatToRename === chat.id ? (
+                          <div className="flex-1 flex items-center">
+                            <Input
+                              value={newTitle}
+                              onChange={(e) => setNewTitle(e.target.value)}
+                              className="h-7 py-1"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleRenameChat();
+                                } else if (e.key === 'Escape') {
+                                  setRenameInputVisible(false);
+                                }
+                              }}
+                              onBlur={handleRenameChat}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <Link
+                              href={`/chat/${chat.id}`}
+                              className="flex-1 truncate"
+                            >
+                              {chat.title || 'New Chat'}
+                            </Link>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                                >
+                                  <MoreHorizontalIcon className="size-4" />
+                                  <span className="sr-only">
+                                    More options
+                                  </span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    startRenameChat(
+                                      chat.id,
+                                      chat.title
+                                    )
+                                  }
+                                >
+                                  Rename
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onSelect={(e) => {
+                                        e.preventDefault();
+                                      }}
+                                    >
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete chat</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete this chat and all its messages. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteChat(chat.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      {renderDialogs()}
     </div>
   );
 }
