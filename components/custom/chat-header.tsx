@@ -36,6 +36,16 @@ type Project = {
   created_at: string;
 };
 
+// Define the expected chat data structure
+interface ChatData {
+  id: string;
+  title: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  project_id: string | null;
+}
+
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -57,13 +67,16 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
 
       try {
         const supabase = createClient();
+        // Add explicit type annotation to the query result
         const { data, error } = await supabase
           .from('chats')
-          .select('project_id')
+          .select('id, title, user_id, created_at, updated_at, project_id')
           .eq('id', chatId)
-          .single();
+          .single<ChatData>();
 
         if (error) throw error;
+        
+        // Now TypeScript knows data has project_id
         setCurrentProjectId(data?.project_id || null);
 
         // Fetch project name if there's a project_id
