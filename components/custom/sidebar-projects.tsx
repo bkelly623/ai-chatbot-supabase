@@ -25,7 +25,8 @@ export function SidebarProjects({
   user,
   setSelectedProjectId 
 }: SidebarProjectsProps) {
-  const [selectedProjectId, setSelectedProjectIdLocal] = useState<string | null>(null);
+  // Fix: Renamed the state variable to match what's used in the JSX
+  const [localSelectedProjectId, setLocalSelectedProjectId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -33,7 +34,7 @@ export function SidebarProjects({
   useEffect(() => {
     const projectId = searchParams.get('projectId');
     if (projectId) {
-      setSelectedProjectIdLocal(projectId);
+      setLocalSelectedProjectId(projectId);
       if (setSelectedProjectId) {
         setSelectedProjectId(projectId);
       }
@@ -41,7 +42,7 @@ export function SidebarProjects({
   }, [searchParams, setSelectedProjectId]);
 
   const handleSelectProject = useCallback((projectId: string) => {
-    setSelectedProjectIdLocal(projectId);
+    setLocalSelectedProjectId(projectId);
     if (setSelectedProjectId) {
       setSelectedProjectId(projectId);
     }
@@ -123,7 +124,7 @@ export function SidebarProjects({
           <div
             key={project.id}
             className={`text-sm text-white truncate px-2 py-1 rounded hover:bg-muted cursor-pointer flex items-center gap-2 ${
-              selectedProjectIdLocal === project.id ? 'bg-muted' : ''
+              localSelectedProjectId === project.id ? 'bg-muted' : ''
             }`}
             onClick={() => handleSelectProject(project.id)}
           >
