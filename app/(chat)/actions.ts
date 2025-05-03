@@ -261,11 +261,32 @@ export async function shareAction(formData: FormData) {
   return redirect(`/share/${id}`);
 }
 
-// Missing function for the route.ts file
-export async function generateTitleFromUserMessage(message: string): Promise<string> {
-  // Simple implementation - take first few words or characters
+// Fixed function for the route.ts file to accept an object with message property
+export async function generateTitleFromUserMessage(
+  input: { message: { content: string } } | string
+): Promise<string> {
+  // Extract the actual message content based on the input type
+  let messageText: string;
+  
+  if (typeof input === 'string') {
+    messageText = input;
+  } else if (input && typeof input === 'object' && 'message' in input) {
+    // Handle object with message property
+    const { message } = input;
+    if (typeof message === 'string') {
+      messageText = message;
+    } else if (message && typeof message === 'object' && 'content' in message) {
+      messageText = message.content;
+    } else {
+      return 'New Chat';
+    }
+  } else {
+    return 'New Chat';
+  }
+  
+  // Generate title from the extracted message text
   const maxLength = 30;
-  let title = message.trim().split(' ').slice(0, 5).join(' ');
+  let title = messageText.trim().split(' ').slice(0, 5).join(' ');
   
   if (title.length > maxLength) {
     title = title.substring(0, maxLength) + '...';
