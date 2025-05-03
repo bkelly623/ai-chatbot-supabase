@@ -1,54 +1,71 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useWindowSize } from 'usehooks-ts';
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useMediaQuery } from "usehooks-ts";
 
-import { SidebarToggle } from '@/components/custom/sidebar-toggle';
-import { Button } from '@/components/ui/button';
-import { BetterTooltip } from '@/components/ui/tooltip';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { EllipsisVertical } from "lucide-react";
+import { moveChatToProject } from "@/actions/move-chat-to-project";
 
-import { PlusIcon, VercelIcon } from './icons';
-import { useSidebar } from '../ui/sidebar';
+interface ChatHeaderProps {
+  chatId?: string;
+  isDisabled?: boolean;
+}
 
-export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
-  const router = useRouter();
-  const { open } = useSidebar();
-  const { width: windowWidth } = useWindowSize();
+export function ChatHeader({ chatId, isDisabled }: ChatHeaderProps) {
+  const pathname = usePathname();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [loading, setLoading] = useState(false);
+
+  const handleMoveToProject = async () => {
+    if (!chatId) return;
+    setLoading(true);
+    try {
+      await moveChatToProject(chatId);
+      // You can add logic here if you want to update the UI
+    } catch (error) {
+      console.error("Failed to move chat to project:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hide toggle on home screen or new chat creation screen
+  const shouldHideToggle =
+    !chatId || pathname === "/" || pathname === "/chat/new";
+
+  if (shouldHideToggle) return null;
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
-      <SidebarToggle />
-      {(!open || windowWidth < 768) && (
-        <BetterTooltip content="New Chat">
+    <div className="ml-2 flex items-center">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
-            className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
-            onClick={() => {
-              router.push('/');
-              router.refresh();
-            }}
+            variant="ghost"
+            className={cn(
+              "h-8 w-8 p-0",
+              isDisabled || loading ? "opacity-50 cursor-not-allowed" : ""
+            )}
+            disabled={isDisabled || loading}
+            aria-label="Chat menu"
           >
-            <PlusIcon />
-            <span className="md:sr-only">New Chat</span>
+            <EllipsisVertical className="size-5" />
           </Button>
-        </BetterTooltip>
-      )}
-
-      {/* ModelSelector removed */}
-
-      <Button
-        className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
-        asChild
-      >
-        <Link
-          href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI%20Chatbot&demo-description=An%20Open-Source%20AI%20Chatbot%20Template%20Built%20With%20Next.js%20and%20the%20AI%20SDK%20by%20Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&stores=%5B%7B%22type%22:%22postgres%22%7D,%7B%22type%22:%22blob%22%7D%5D"
-          target="_noblank"
-        >
-          <VercelIcon size={16} />
-          Deploy with Vercel
-        </Link>
-      </Button>
-    </header>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleMoveToProject}>
+            Move to Project
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
