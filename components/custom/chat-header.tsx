@@ -3,76 +3,70 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { EllipsisVertical } from 'lucide-react';
-
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
-import { Database } from '@/types/supabase';
-import { createClient } from '@/utils/supabase/client';
-import { moveChatToProject } from '@/app/actions/project-actions';
+import { moveChatToProject } from '../../app/actions/project-actions';
+import { getUserProjects } from '../../app/actions/user-projects';
+import { Button } from '../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandGroup, CommandItem } from '../ui/command';
 
 interface ChatHeaderProps {
   chatId?: string;
-  userId?: string;
-  userProjects?: Database['public']['Tables']['projects']['Row'][];
 }
 
-export function ChatHeader({ chatId, userId, userProjects }: ChatHeaderProps) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function ChatHeader({ chatId }: ChatHeaderProps) {
   const router = useRouter();
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleMoveToProject = async (projectId: string) => {
+  const handleMoveToProject = async () => {
     if (!chatId) return;
-
     setLoading(true);
+    try {
+      const fetchedProjects = await getUserProjects();
+      setProjects(fetchedProjects);
+      setIsPopoverOpen(true);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProjectSelect = async (projectId: string) => {
+    if (!chatId) return;
     try {
       await moveChatToProject(chatId, projectId);
       router.refresh();
     } catch (error) {
       console.error('Failed to move chat to project:', error);
     } finally {
-      setLoading(false);
-      setOpen(false);
+      setIsPopoverOpen(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-between border-b px-4 py-2">
-      <div className="text-lg font-semibold">Chat</div>
-      {chatId && userProjects?.length ? (
-        <Popover open={open} onOpenChange={setOpen}>
+    <div className="flex items-center justify-end gap-2">
+      {chatId && (
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
             <Button
-              variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              variant="ghost"
+              className="text-muted-foreground"
+              onClick={handleMoveToProject}
               disabled={loading}
             >
-              <EllipsisVertical className="h-4 w-4" />
+              <EllipsisVertical className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-0">
+          <PopoverContent className="w-48 p-0">
             <Command>
-              <CommandInput placeholder="Select project..." />
-              <CommandEmpty>No projects found.</CommandEmpty>
-              <CommandGroup heading="Projects">
-                {userProjects.map((project) => (
+              <CommandGroup heading="Move to Project">
+                {projects.map((project) => (
                   <CommandItem
                     key={project.id}
-                    value={project.name}
-                    onSelect={() => handleMoveToProject(project.id)}
+                    onSelect={() => handleProjectSelect(project.id)}
                   >
                     {project.name}
                   </CommandItem>
@@ -81,7 +75,7 @@ export function ChatHeader({ chatId, userId, userProjects }: ChatHeaderProps) {
             </Command>
           </PopoverContent>
         </Popover>
-      ) : null}
+      )}
     </div>
   );
 }
