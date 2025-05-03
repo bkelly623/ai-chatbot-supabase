@@ -1,16 +1,17 @@
 import { notFound, redirect } from 'next/navigation';
-
 import { createClient } from '@/lib/supabase/server';
 import { ProjectHeader } from '@/components/custom/project-header';
 import { ProjectChatList } from '@/components/custom/project-chat-list';
 
-interface ProjectPageProps {
-  params: {
-    id: string;
-  };
+interface PageParams {
+  id: string;
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
+export default async function ProjectPage({
+  params
+}: {
+  params: PageParams;
+}) {
   const supabase = await createClient();
 
   // Check if user is logged in
