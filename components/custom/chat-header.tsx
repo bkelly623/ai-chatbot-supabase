@@ -1,81 +1,102 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { EllipsisVertical } from 'lucide-react';
-import { moveChatToProject } from '../../app/actions/project-actions';
-import { getUserProjects } from '../../app/actions/user-projects';
-import { Button } from '../ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { Command, CommandGroup, CommandItem } from '../ui/command';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useWindowSize } from 'usehooks-ts';
 
-interface ChatHeaderProps {
-  chatId?: string;
-}
+import { updateChatProjectId } from '@/app/(chat)/actions';
+import { CheckIcon, FolderIcon, LoaderIcon, MoreHorizontalIcon } from '@/components/custom/icons';
+import { SidebarToggle } from '@/components/custom/sidebar-toggle';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { BetterTooltip } from '@/components/ui/tooltip';
+import { createClient } from '@/lib/supabase/client';
 
-export default function ChatHeader({ chatId }: ChatHeaderProps) {
+type Project = {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+};
+
+export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { width } = useWindowSize();
+  const { id: chatId } = useParams() as { id: string };
 
-  const handleMoveToProject = async () => {
-    if (!chatId) return;
-    setLoading(true);
-    try {
-      const fetchedProjects = await getUserProjects();
-      setProjects(fetchedProjects);
-      setIsPopoverOpen(true);
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
-  const handleProjectSelect = async (projectId: string) => {
-    if (!chatId) return;
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.from('projects').select('*');
+      if (!error && data) setProjects(data);
+    };
+    fetchProjects();
+  }, []);
+
+  const handleMoveChat = async (projectId: string) => {
+    if (!chatId || !projectId) return;
     try {
-      await moveChatToProject(chatId, projectId);
+      setIsLoading(true);
+      await updateChatProjectId(chatId, projectId);
+      setCurrentProjectId(projectId);
+      toast.success('Chat moved successfully.');
       router.refresh();
-    } catch (error) {
-      console.error('Failed to move chat to project:', error);
+    } catch (err) {
+      toast.error('Failed to move chat.');
     } finally {
-      setIsPopoverOpen(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-end gap-2">
-      {chatId && (
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-muted-foreground"
-              onClick={handleMoveToProject}
-              disabled={loading}
-            >
-              <EllipsisVertical className="h-5 w-5" />
+    <div className="flex h-16 items-center justify-between border-b px-4">
+      <SidebarToggle />
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontalIcon />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-0">
-            <Command>
-              <CommandGroup heading="Move to Project">
-                {projects.map((project) => (
-                  <CommandItem
-                    key={project.id}
-                    onSelect={() => handleProjectSelect(project.id)}
-                  >
-                    {project.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Chat Options</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Move to Project</DropdownMenuLabel>
+            {projects.length === 0 && (
+              <DropdownMenuItem disabled>
+                <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                Loading projects...
+              </DropdownMenuItem>
+            )}
+            {projects.map((project) => (
+              <DropdownMenuItem
+                key={project.id}
+                onClick={() => handleMoveChat(project.id)}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <FolderIcon className="h-4 w-4" />
+                  {project.name}
+                </div>
+                {project.id === currentProjectId && <CheckIcon className="h-4 w-4 text-primary" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
