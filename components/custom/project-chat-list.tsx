@@ -1,20 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { format } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-import { updateChatProjectId } from '@/app/(chat)/actions';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,172 +15,194 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { 
-  MoreHorizontalIcon,
-  MessageIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@/components/custom/icons';
-import { Database } from '@/lib/supabase/types';
-
-type Chat = Database['public']['Tables']['chats']['Row'];
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { MoreHorizontalIcon, TrashIcon } from '@/components/custom/icons';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ProjectChatListProps {
-  chats: Chat[];
+  chats: any[];
   projectId: string;
   userId: string;
 }
 
-export function ProjectChatList({ chats, projectId, userId }: ProjectChatListProps) {
+export function ProjectChatList({
+  chats,
+  projectId,
+  userId,
+}: ProjectChatListProps) {
   const router = useRouter();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  // Function to create a new chat in this project
-  const handleCreateNewChat = () => {
-    router.push(`/?project=${projectId}`);
-  };
-
-  // Function to handle removing a chat from the project
   const handleRemoveFromProject = async (chatId: string) => {
+    setIsRemoving(true);
     try {
-      await updateChatProjectId(chatId, null);
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_id: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove chat from project');
+      }
+
       toast.success('Chat removed from project');
       router.refresh();
     } catch (error) {
       console.error('Error removing chat from project:', error);
       toast.error('Failed to remove chat from project');
+    } finally {
+      setIsRemoving(false);
+      setSelectedChatId(null);
     }
   };
 
-  // Function to handle deleting a chat
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  const handleDeleteChat = async (chatId: string) => {
+    setIsRemoving(true);
+    try {
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'DELETE',
+      });
 
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: 'DELETE',
-    });
+      if (!response.ok) {
+        throw new Error('Failed to delete chat');
+      }
 
-    toast.promise(deletePromise, {
-      loading: 'Deleting chat...',
-      success: () => {
-        router.refresh();
-        return 'Chat deleted successfully';
-      },
-      error: 'Failed to delete chat',
-    });
-
-    setShowDeleteDialog(false);
-    setDeleteId(null);
+      toast.success('Chat deleted');
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat');
+    } finally {
+      setIsRemoving(false);
+      setSelectedChatId(null);
+    }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">
-          {chats.length > 0 
-            ? `${chats.length} chat${chats.length === 1 ? '' : 's'} in this project`
-            : 'No chats in this project yet'}
-        </h2>
-        <Button 
-          onClick={handleCreateNewChat} 
-          className="flex items-center gap-1"
-        >
-          <PlusIcon className="size-4" />
-          <span>New Chat</span>
-        </Button>
-      </div>
-
-      {chats.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {chats.map((chat) => (
-            <Card key={chat.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between p-4">
-                <CardTitle className="text-sm truncate">
-                  {chat.title || 'New Chat'}
-                </CardTitle>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <MoreHorizontalIcon className="size-4" />
-                      <span className="sr-only">Menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => handleRemoveFromProject(chat.id)}
-                    >
-                      Remove from project
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer text-destructive"
-                      onClick={() => {
-                        setDeleteId(chat.id);
-                        setShowDeleteDialog(true);
-                      }}
-                    >
-                      <TrashIcon className="size-4 mr-2" />
-                      Delete chat
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">
-                    {chat.updated_at
-                      ? format(new Date(chat.updated_at), 'MMM d, yyyy')
-                      : 'Just now'}
-                  </span>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/chat/${chat.id}`} className="flex items-center gap-1">
-                      <MessageIcon className="size-4" />
-                      <span>Open</span>
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center p-8 bg-muted/50 rounded-lg">
-          <MessageIcon className="size-10 mb-4 text-muted-foreground" />
-          <p className="text-center text-muted-foreground">
-            No chats in this project yet. Create a new chat to get started.
-          </p>
-          <Button 
-            onClick={handleCreateNewChat} 
-            className="mt-4 flex items-center gap-1"
+  if (chats.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle>No chats in this project</CardTitle>
+          <CardDescription>
+            Start a new chat or add existing chats to this project.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button
+            onClick={() => {
+              router.push(`/?projectId=${projectId}`);
+            }}
           >
-            <PlusIcon className="size-4" />
-            <span>Create New Chat</span>
+            Create New Chat
           </Button>
-        </div>
-      )}
+        </CardFooter>
+      </Card>
+    );
+  }
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              chat and remove it from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground"
-              onClick={handleDelete}
-            >
-              Delete chat
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {chats.map((chat) => (
+        <Card key={chat.id}>
+          <CardHeader className="relative">
+            <CardTitle className="pr-8 truncate">{chat.title}</CardTitle>
+            <CardDescription className="truncate">
+              {format(new Date(chat.updated_at), 'MMM d, yyyy')}
+            </CardDescription>
+            <div className="absolute top-2 right-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-8">
+                    <MoreHorizontalIcon className="size-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedChatId(chat.id);
+                      handleRemoveFromProject(chat.id);
+                    }}
+                  >
+                    Remove from project
+                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setSelectedChatId(chat.id);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <TrashIcon className="mr-2 size-4" />
+                          Delete permanently
+                        </div>
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete this chat and all its messages.
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive hover:bg-destructive/90"
+                          onClick={() => {
+                            if (selectedChatId) {
+                              handleDeleteChat(selectedChatId);
+                            }
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="line-clamp-2 text-muted-foreground h-10">
+              {chat.messages?.length > 0
+                ? chat.messages[chat.messages.length - 1]?.content
+                : 'No messages yet'}
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="secondary" className="w-full" asChild>
+              <Link href={`/chat/${chat.id}`}>Open Chat</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   );
 }
