@@ -261,36 +261,76 @@ export async function shareAction(formData: FormData) {
   return redirect(`/share/${id}`);
 }
 
-// Fixed function for the route.ts file to accept an object with message property
+// A more flexible type definition for the message object
+type CoreUserMessage = {
+  content: any; // Using any to handle various content structures
+  [key: string]: any; // Allow for any other properties
+};
+
+// Fixed function for the route.ts file to accept various message formats
 export async function generateTitleFromUserMessage(
-  input: { message: { content: string } } | string
+  input: { message: CoreUserMessage } | string
 ): Promise<string> {
-  // Extract the actual message content based on the input type
-  let messageText: string;
-  
-  if (typeof input === 'string') {
-    messageText = input;
-  } else if (input && typeof input === 'object' && 'message' in input) {
-    // Handle object with message property
-    const { message } = input;
-    if (typeof message === 'string') {
-      messageText = message;
-    } else if (message && typeof message === 'object' && 'content' in message) {
-      messageText = message.content;
-    } else {
+  try {
+    // Extract text from the message content
+    let messageText = '';
+    
+    if (typeof input === 'string') {
+      messageText = input;
+    } else if (input && typeof input === 'object' && 'message' in input) {
+      const { message } = input;
+      
+      // Handle different possible structures of the message content
+      if (typeof message.content === 'string') {
+        messageText = message.content;
+      } else if (Array.isArray(message.content)) {
+        // Attempt to extract text from array content (common in API responses)
+        const textParts = message.content
+          .filter(part => part && typeof part === 'object' && 'text' in part)
+          .map(part => part.text);
+        
+        messageText = textParts.join(' ');
+        
+        // If no text parts found, try to find any string properties
+        if (!messageText) {
+          message.content.forEach((part: any) => {
+            if (part && typeof part === 'object') {
+              Object.entries(part).forEach(([key, value]) => {
+                if (typeof value === 'string') {
+                  messageText += value + ' ';
+                }
+              });
+            }
+          });
+        }
+      }
+      
+      // If still no text found, try to extract from any string property in the message
+      if (!messageText) {
+        Object.entries(message).forEach(([key, value]) => {
+          if (typeof value === 'string') {
+            messageText += value + ' ';
+          }
+        });
+      }
+    }
+    
+    // If no text could be extracted, return default title
+    if (!messageText.trim()) {
       return 'New Chat';
     }
-  } else {
+    
+    // Generate title from the extracted message text
+    const maxLength = 30;
+    let title = messageText.trim().split(' ').slice(0, 5).join(' ');
+    
+    if (title.length > maxLength) {
+      title = title.substring(0, maxLength) + '...';
+    }
+    
+    return title || 'New Chat';
+  } catch (error) {
+    console.error('Error generating title:', error);
     return 'New Chat';
   }
-  
-  // Generate title from the extracted message text
-  const maxLength = 30;
-  let title = messageText.trim().split(' ').slice(0, 5).join(' ');
-  
-  if (title.length > maxLength) {
-    title = title.substring(0, maxLength) + '...';
-  }
-  
-  return title || 'New Chat';
 }
