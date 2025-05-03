@@ -5,15 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { format, isToday, isYesterday } from 'date-fns';
+import { ChevronDown, ChevronUp, Clock, MoreHorizontal, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ClockIcon,
-  MoreHorizontalIcon,
-  TrashIcon,
-} from '@/components/custom/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -263,7 +257,7 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
       {/* History title with clear all button */}
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center">
-          <ClockIcon className="mr-2 size-4" />
+          <Clock className="mr-2 size-4" />
           <h2 className="text-sm font-semibold">Chat History</h2>
         </div>
         {chats.length > 0 && (
@@ -274,7 +268,7 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
                 size="icon"
                 className="size-7"
               >
-                <TrashIcon className="size-4" />
+                <Trash className="size-4" />
                 <span className="sr-only">Clear history</span>
               </Button>
             </AlertDialogTrigger>
@@ -337,9 +331,9 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
                 >
                   <span>{group}</span>
                   {collapsedGroups.includes(group) ? (
-                    <ChevronDownIcon className="size-4" />
+                    <ChevronDown className="size-4" />
                   ) : (
-                    <ChevronUpIcon className="size-4" />
+                    <ChevronUp className="size-4" />
                   )}
                 </div>
                 {!collapsedGroups.includes(group) && (
@@ -385,7 +379,7 @@ export function SidebarHistory({ user, activeChat }: SidebarHistoryProps) {
                                   size="icon"
                                   className="h-7 w-7 opacity-0 group-hover:opacity-100"
                                 >
-                                  <MoreHorizontalIcon className="size-4" />
+                                  <MoreHorizontal className="size-4" />
                                   <span className="sr-only">
                                     More options
                                   </span>
