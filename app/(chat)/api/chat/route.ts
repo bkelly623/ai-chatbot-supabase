@@ -14,7 +14,7 @@ function generateId(length = 16) {
   return result;
 }
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
     const json = await req.json();
