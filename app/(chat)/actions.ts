@@ -1,4 +1,3 @@
-// Correctly handle the session object structure
 'use server';
 
 import { revalidatePath } from 'next/cache';
