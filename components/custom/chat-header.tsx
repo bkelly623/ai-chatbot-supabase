@@ -205,105 +205,107 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         </BetterTooltip>
       )}
 
-      {/* Chat options dropdown */}
-      <BetterTooltip content="Chat Options">
-        <DropdownMenu 
-          modal={true}
-          open={isDropdownOpen}
-          onOpenChange={(open) => {
-            setIsDropdownOpen(open);
-            if (open && chatId && userId) {
-              // Load projects when the dropdown is opened
-              loadProjects();
-            } else if (!open) {
-              // Only reset project selector when dropdown is closed
-              setShowProjectSelector(false);
-            }
-          }}
-        >
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="order-3 md:order-2 md:px-2 px-2 md:h-fit"
-            >
-              <MoreHorizontalIcon />
-              <span className="md:sr-only">Options</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {!showProjectSelector ? (
-              <DropdownMenuItem 
-                className="cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault(); // Prevent dropdown from closing
-                  console.log('Move to project clicked');
-                  setShowProjectSelector(true);
-                }}
+      {/* Chat options dropdown - Only show if chatId exists */}
+      {chatId && (
+        <BetterTooltip content="Chat Options">
+          <DropdownMenu 
+            modal={true}
+            open={isDropdownOpen}
+            onOpenChange={(open) => {
+              setIsDropdownOpen(open);
+              if (open && userId) {
+                // Load projects when the dropdown is opened
+                loadProjects();
+              } else if (!open) {
+                // Only reset project selector when dropdown is closed
+                setShowProjectSelector(false);
+              }
+            }}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="order-3 md:order-2 md:px-2 px-2 md:h-fit"
               >
-                <FolderIcon className="size-4 mr-2" />
-                <span>Move to project</span>
-              </DropdownMenuItem>
-            ) : (
-              <>
-                <DropdownMenuLabel>Select a project</DropdownMenuLabel>
-                {isLoadingProjects ? (
-                  <DropdownMenuItem disabled>
-                    <LoaderIcon className="size-4 animate-spin mr-2" />
-                    <span>Loading projects...</span>
-                  </DropdownMenuItem>
-                ) : (
-                  <>
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault(); // Prevent dropdown from closing
-                        handleMoveToProject(null);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <span>Remove from project</span>
-                      {currentProjectId === null && (
-                        <CheckIcon className="ml-auto size-4" />
-                      )}
+                <MoreHorizontalIcon />
+                <span className="md:sr-only">Options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!showProjectSelector ? (
+                <DropdownMenuItem 
+                  className="cursor-pointer"
+                  onSelect={(e) => {
+                    e.preventDefault(); // Prevent dropdown from closing
+                    console.log('Move to project clicked');
+                    setShowProjectSelector(true);
+                  }}
+                >
+                  <FolderIcon className="size-4 mr-2" />
+                  <span>Move to project</span>
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuLabel>Select a project</DropdownMenuLabel>
+                  {isLoadingProjects ? (
+                    <DropdownMenuItem disabled>
+                      <LoaderIcon className="size-4 animate-spin mr-2" />
+                      <span>Loading projects...</span>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {projects.length === 0 ? (
-                      <DropdownMenuItem disabled>
-                        <span>No projects found (UserId: {userId?.slice(0, 5)}...)</span>
+                  ) : (
+                    <>
+                      <DropdownMenuItem 
+                        onSelect={(e) => {
+                          e.preventDefault(); // Prevent dropdown from closing
+                          handleMoveToProject(null);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <span>Remove from project</span>
+                        {currentProjectId === null && (
+                          <CheckIcon className="ml-auto size-4" />
+                        )}
                       </DropdownMenuItem>
-                    ) : (
-                      projects.map((project) => (
-                        <DropdownMenuItem
-                          key={project.id}
-                          onSelect={(e) => {
-                            e.preventDefault(); // Prevent dropdown from closing
-                            handleMoveToProject(project.id);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <span>{project.name}</span>
-                          {currentProjectId === project.id && (
-                            <CheckIcon className="ml-auto size-4" />
-                          )}
+                      <DropdownMenuSeparator />
+                      {projects.length === 0 ? (
+                        <DropdownMenuItem disabled>
+                          <span>No projects found (UserId: {userId?.slice(0, 5)}...)</span>
                         </DropdownMenuItem>
-                      ))
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault(); // Prevent dropdown from closing
-                        setShowProjectSelector(false);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <span>Back</span>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </BetterTooltip>
+                      ) : (
+                        projects.map((project) => (
+                          <DropdownMenuItem
+                            key={project.id}
+                            onSelect={(e) => {
+                              e.preventDefault(); // Prevent dropdown from closing
+                              handleMoveToProject(project.id);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <span>{project.name}</span>
+                            {currentProjectId === project.id && (
+                              <CheckIcon className="ml-auto size-4" />
+                            )}
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onSelect={(e) => {
+                          e.preventDefault(); // Prevent dropdown from closing
+                          setShowProjectSelector(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <span>Back</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </BetterTooltip>
+      )}
 
       <Button
         className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
