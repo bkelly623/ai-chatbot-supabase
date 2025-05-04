@@ -107,8 +107,8 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
     if (setSelectedProjectId) {
       setSelectedProjectId(projectId);
     }
-    // Eventually, we will navigate to project page
-    router.push(`/?projectId=${projectId}`);
+    // Navigate to the project page using the route-based URL
+    router.push(`/projects/${projectId}`);
   };
 
   const handleCloseCreateProjectModal = () => {
