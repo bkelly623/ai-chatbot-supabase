@@ -1,76 +1,80 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { updateChatProject } from '@/app/actions';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { MoreVertical } from 'lucide-react';
-import { Project } from '@/types';
-import { useSidebar } from '@/components/sidebar/use-sidebar';
-import SidebarToggle from '@/components/sidebar/sidebar-toggle';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import { MoreHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { updateChatProjectId } from "@/app/actions";
+import { ChatProjectSelector } from "./chat-project-selector";
 
 interface ChatHeaderProps {
   chatId: string;
-  projectId: string | null;
-  projects: Project[];
+  isShareable?: boolean;
+  projectId?: string | null;
 }
 
-export default function ChatHeader({ chatId, projectId, projects }: ChatHeaderProps) {
+export function ChatHeader({
+  chatId,
+  isShareable,
+  projectId,
+}: ChatHeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { isCollapsed } = useSidebar();
+  const [showProjects, setShowProjects] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const [showProjectSelect, setShowProjectSelect] = useState(false);
-
-  const handleMoveToProject = async (targetProjectId: string) => {
-    if (!chatId || !targetProjectId) return;
-
-    await updateChatProject(chatId, targetProjectId);
+  const handleProjectChange = async (newProjectId: string) => {
+    await updateChatProjectId(chatId, newProjectId);
     router.refresh();
-    setShowProjectSelect(false);
   };
 
-  const renderProjectOptions = () => (
-    <>
-      {projects
-        .filter((p) => p.id !== projectId)
-        .map((project) => (
-          <DropdownMenuItem
-            key={project.id}
-            onClick={() => handleMoveToProject(project.id)}
-          >
-            {project.title}
-          </DropdownMenuItem>
-        ))}
-    </>
-  );
-
   return (
-    <div className="flex items-center justify-between border-b border-muted px-4 py-3">
-      <div className="flex items-center gap-2">
-        {!isCollapsed && <SidebarToggle />}
-        <Button onClick={() => router.push('/chat')} variant="outline" size="sm">
-          + New Chat
-        </Button>
-      </div>
+    <div className="flex items-center justify-between px-4 py-2 border-b">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => router.push("/chat")}
+        className="text-sm"
+      >
+        + New Chat
+      </Button>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {!showProjectSelect ? (
-            <DropdownMenuItem onClick={() => setShowProjectSelect(true)}>
-              Move to project
-            </DropdownMenuItem>
-          ) : (
-            renderProjectOptions()
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setMenuOpen(!menuOpen);
+            setShowProjects(false);
+          }}
+        >
+          <MoreHorizontal className="w-5 h-5" />
+        </Button>
+
+        {menuOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow z-10">
+            {!showProjects ? (
+              <button
+                onClick={() => setShowProjects(true)}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              >
+                Move to Project
+              </button>
+            ) : (
+              <div className="px-2 py-2">
+                <ChatProjectSelector
+                  chatId={chatId}
+                  currentProjectId={projectId}
+                  onSelectProject={async (id) => {
+                    await handleProjectChange(id);
+                    setMenuOpen(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
