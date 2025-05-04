@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import CreateProjectModal from '@/components/custom/createprojectmodal';
-import { createClient } from '@/lib/supabase/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { createClient } from '@/lib/supabase/client';
 
 import type { User } from '@supabase/supabase-js';
 
