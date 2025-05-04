@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { BetterTooltip } from '@/components/ui/tooltip';
+
 import { useSidebar } from '../ui/sidebar';
 
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
