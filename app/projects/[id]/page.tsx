@@ -4,13 +4,13 @@ import { notFound } from 'next/navigation';
 import { DEFAULT_MODEL_NAME, models } from '@/ai/models';
 import ProjectDetail from '@/components/custom/project-detail';
 import { getSession } from '@/db/cached-queries';
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
-export default async function ProjectPage({
-  params
-}: {
+interface PageProps {
   params: { id: string };
-}) {
+}
+
+export default async function ProjectPage({ params }: PageProps) {
   const { id } = params;
   
   // Get the user session
@@ -21,7 +21,7 @@ export default async function ProjectPage({
   }
 
   // Fetch the project data
-  const supabase = createServerClient();
+  const supabase = createClient();
   const { data: project, error } = await supabase
     .from('projects')
     .select('*')
