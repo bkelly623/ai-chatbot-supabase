@@ -47,6 +47,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Get current project ID for the chat
   useEffect(() => {
@@ -122,6 +123,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
       
       // Reset the UI state
       setShowProjectSelector(false);
+      setIsDropdownOpen(false);
       
       // Refresh the page to update the UI
       router.refresh();
@@ -154,11 +156,15 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
       {/* Chat options dropdown - enhanced with project selection */}
       <BetterTooltip content="Chat Options">
         <DropdownMenu 
+          open={isDropdownOpen}
           onOpenChange={(open) => {
+            setIsDropdownOpen(open);
             if (open && chatId) {
               // Load projects when the dropdown is opened
               loadProjects();
-            } else {
+            } else if (!open) {
+              // Only reset project selector when dropdown is closed
+              // This prevents losing state when clicking menu items
               setShowProjectSelector(false);
             }
           }}
@@ -176,7 +182,8 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
             {!showProjectSelector ? (
               <DropdownMenuItem 
                 className="cursor-pointer"
-                onClick={() => {
+                onSelect={(e) => {
+                  e.preventDefault(); // Prevent dropdown from closing
                   console.log('Move to project clicked');
                   setShowProjectSelector(true);
                 }}
@@ -195,7 +202,10 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                 ) : (
                   <>
                     <DropdownMenuItem 
-                      onClick={() => handleMoveToProject(null)}
+                      onSelect={(e) => {
+                        e.preventDefault(); // Prevent dropdown from closing
+                        handleMoveToProject(null);
+                      }}
                       className="cursor-pointer"
                     >
                       <span>Remove from project</span>
@@ -212,7 +222,10 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                       projects.map((project) => (
                         <DropdownMenuItem
                           key={project.id}
-                          onClick={() => handleMoveToProject(project.id)}
+                          onSelect={(e) => {
+                            e.preventDefault(); // Prevent dropdown from closing
+                            handleMoveToProject(project.id);
+                          }}
                           className="cursor-pointer"
                         >
                           <span>{project.name}</span>
@@ -224,7 +237,10 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={() => setShowProjectSelector(false)}
+                      onSelect={(e) => {
+                        e.preventDefault(); // Prevent dropdown from closing
+                        setShowProjectSelector(false);
+                      }}
                       className="cursor-pointer"
                     >
                       <span>Back</span>
