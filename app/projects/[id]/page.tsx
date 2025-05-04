@@ -18,7 +18,7 @@ export default async function Page(props: { params: Promise<any> }) {
   }
 
   // Fetch the project data
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: project, error } = await supabase
     .from('projects')
     .select('*')
