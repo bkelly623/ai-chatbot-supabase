@@ -23,6 +23,16 @@ import { createClient } from '@/lib/supabase/client';
 
 import { useSidebar } from '../ui/sidebar';
 
+// Match the Chat interface from sidebar-history.tsx
+interface Chat {
+  id: string;
+  title: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  project_id?: string | null;
+}
+
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -36,7 +46,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   
-  // Get current project ID
+  // Get current project ID using the same approach as sidebar
   useEffect(() => {
     if (!chatId) return;
     
@@ -45,12 +55,15 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         const supabase = createClient();
         const { data, error } = await supabase
           .from('chats')
-          .select('project_id')
+          .select('*')
           .eq('id', chatId)
           .single();
           
         if (error) throw error;
-        setCurrentProjectId(data?.project_id || null);
+        
+        // Using the Chat interface
+        const chat = data as Chat;
+        setCurrentProjectId(chat?.project_id || null);
       } catch (error) {
         console.error('Error fetching chat project:', error);
       }
@@ -59,7 +72,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     fetchChatProject();
   }, [chatId]);
   
-  // Function to load projects
+  // Function to load projects - same as sidebar
   const loadProjects = async () => {
     if (projects.length > 0) return; // Only load once
 
@@ -89,7 +102,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     }
   };
 
-  // Function to handle moving chat to a project
+  // Function to handle moving chat to a project - same as sidebar
   const handleMoveToProject = async (projectId: string | null) => {
     if (!chatId) return;
     
