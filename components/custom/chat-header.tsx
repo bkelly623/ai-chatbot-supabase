@@ -1,24 +1,33 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
 import { SidebarToggle } from '@/components/custom/sidebar-toggle';
+import { MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { BetterTooltip } from '@/components/ui/tooltip';
-
-import { PlusIcon, VercelIcon } from './icons';
 import { useSidebar } from '../ui/sidebar';
 
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
   const { width: windowWidth } = useWindowSize();
+  const params = useParams();
+  const chatId = params?.id as string | undefined;
 
   return (
     <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
       <SidebarToggle />
+      
       {(!open || windowWidth < 768) && (
         <BetterTooltip content="New Chat">
           <Button
@@ -35,7 +44,31 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         </BetterTooltip>
       )}
 
-      {/* ModelSelector removed */}
+      {/* Chat options dropdown - for now, just the UI without functionality */}
+      <BetterTooltip content="Chat Options">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="order-3 md:order-2 md:px-2 px-2 md:h-fit"
+            >
+              <MoreHorizontalIcon />
+              <span className="md:sr-only">Options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => {
+                console.log('Move to project clicked');
+                // We'll implement this functionality in the next step
+              }}
+            >
+              Move to project
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </BetterTooltip>
 
       <Button
         className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
