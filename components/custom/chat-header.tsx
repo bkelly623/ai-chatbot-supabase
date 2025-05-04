@@ -1,88 +1,97 @@
-'use client'
+'use client';
 
-import { Chat } from '@/types'
-import { Button } from '@/components/ui/button'
-import { MoreVertical, PlusCircle } from 'lucide-react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { EllipsisVertical, Plus } from 'lucide-react';
+
+import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
+  PopoverTrigger,
+} from '../ui/popover';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem
-} from '@/components/ui/command'
-import { moveChatToProject } from '@/app/actions/user-projects'
-import { useSidebar } from '@/components/sidebar/use-sidebar'
-import { SidebarToggle } from '@/components/sidebar/sidebar-toggle'
+  CommandItem,
+} from '../ui/command';
+
+import { moveChatToProject } from '../../app/actions/project-actions';
+import type { Database } from '../../types/supabase';
 
 interface ChatHeaderProps {
-  chat: Chat
-  projects: { id: string; name: string }[]
+  chatId?: string;
+  userId?: string;
+  userProjects?: Database['public']['Tables']['projects']['Row'][];
 }
 
-export function ChatHeader({ chat, projects }: ChatHeaderProps) {
-  const [open, setOpen] = useState(false)
-  const [selectingProject, setSelectingProject] = useState(false)
-  const router = useRouter()
+export function ChatHeader({ chatId, userId, userProjects }: ChatHeaderProps) {
+  const [open, setOpen] = useState(false);
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSelectProject = async (projectId: string) => {
-    await moveChatToProject(chat.id, projectId)
-    setOpen(false)
-    setSelectingProject(false)
-    router.refresh()
-  }
+  const handleMoveToProject = async (projectId: string) => {
+    if (!chatId || !projectId) return;
+    try {
+      setLoading(true);
+      await moveChatToProject(chatId, projectId);
+      setOpen(false);
+      setShowProjectSelector(false);
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to move chat:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-      <div className="flex items-center space-x-2">
-        <SidebarToggle />
-        <Button variant="ghost" onClick={() => router.push('/')}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Chat
-        </Button>
-      </div>
+    <div className="flex items-center justify-between border-b px-4 py-3">
+      <Button variant="outline" size="sm" onClick={() => router.push('/')}>
+        <Plus className="h-4 w-4 mr-2" />
+        New Chat
+      </Button>
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon">
-            <MoreVertical className="h-5 w-5" />
+            <EllipsisVertical className="h-5 w-5" />
           </Button>
         </PopoverTrigger>
-
-        <PopoverContent className="w-64 p-0" align="end">
-          {selectingProject ? (
+        <PopoverContent align="end" className="w-[240px] p-2">
+          {!showProjectSelector ? (
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-sm"
+                onClick={() => setShowProjectSelector(true)}
+              >
+                Move to Project
+              </Button>
+            </div>
+          ) : (
             <Command>
               <CommandInput placeholder="Select project..." />
-              <CommandEmpty>No projects found.</CommandEmpty>
+              <CommandEmpty>No project found.</CommandEmpty>
               <CommandGroup>
-                {projects.map(project => (
+                {userProjects?.map((project) => (
                   <CommandItem
                     key={project.id}
-                    value={project.name}
-                    onSelect={() => handleSelectProject(project.id)}
+                    onSelect={() => handleMoveToProject(project.id)}
+                    disabled={loading}
                   >
                     {project.name}
                   </CommandItem>
                 ))}
               </CommandGroup>
             </Command>
-          ) : (
-            <Command>
-              <CommandGroup>
-                <CommandItem onSelect={() => setSelectingProject(true)}>
-                  Move to Project
-                </CommandItem>
-              </CommandGroup>
-            </Command>
           )}
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }
