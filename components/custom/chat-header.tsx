@@ -33,6 +33,14 @@ interface Chat {
   project_id?: string | null;
 }
 
+// Define Project interface
+interface Project {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+}
+
 export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -44,7 +52,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   
   // Add new state for projects functionality
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -74,18 +82,21 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     fetchChatProject();
   }, [chatId]);
   
-  // Function to load projects
+  // Function to load projects - improved version
   const loadProjects = async () => {
-    if (projects.length > 0) return; // Only load once
-
+    // Always refresh projects when dropdown is opened
     setIsLoadingProjects(true);
+    setProjects([]);
+    
     try {
       const supabase = createClient();
       
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
       
       // Get projects for the current user
       const { data, error } = await supabase
@@ -95,6 +106,8 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      
+      console.log('Loaded projects:', data);
       setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
