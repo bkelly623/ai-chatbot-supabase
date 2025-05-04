@@ -6,11 +6,8 @@ import ProjectDetail from '@/components/custom/project-detail';
 import { getSession } from '@/db/cached-queries';
 import { createClient } from '@/lib/supabase/server';
 
-export default async function ProjectPage({
-  params
-}: {
-  params: { id: string }
-}) {
+export default async function Page(props: { params: Promise<any> }) {
+  const params = await props.params;
   const { id } = params;
   
   // Get the user session
@@ -39,7 +36,7 @@ export default async function ProjectPage({
   }
 
   // Get the selected model from cookies
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('model-id')?.value;
   const selectedModelId =
     models.find((model) => model.id === modelIdFromCookie)?.id ||
