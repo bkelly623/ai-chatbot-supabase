@@ -4,8 +4,9 @@ import { MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
 
+import CreateProjectModal from '@/components/custom/createprojectmodal';
+import { createClient } from '@/lib/supabase/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +26,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import CreateProjectModal from '@/components/custom/createprojectmodal';
-import { createClient } from '@/lib/supabase/client';
+
+import type { User } from '@supabase/supabase-js';
 
 // Define Chat interface to match the one in sidebar-history.tsx
 interface Chat {
