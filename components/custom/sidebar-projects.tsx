@@ -28,6 +28,24 @@ import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
+// Define Chat interface to match the one in sidebar-history.tsx
+interface Chat {
+  id: string;
+  title: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  project_id?: string | null;
+}
+
+// Define Project interface
+interface Project {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+}
+
 export interface SidebarProjectsProps {
   user?: User | undefined;
   setSelectedProjectId?: (id: string) => void;
@@ -35,12 +53,12 @@ export interface SidebarProjectsProps {
 
 export default function SidebarProjects(props: SidebarProjectsProps) {
   const { user, setSelectedProjectId } = props;
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState<boolean>(false);
-  const [projectToEdit, setProjectToEdit] = useState<any | null>(null);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
   const [showRenameModal, setShowRenameModal] = useState<boolean>(false);
   const [newProjectName, setNewProjectName] = useState<string>('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -103,9 +121,10 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
     
     try {
       // First update any chats in this project to have null project_id
+      // Using "as any" to bypass TypeScript's type checking for the update
       const { error: chatUpdateError } = await supabase
         .from('chats')
-        .update({ project_id: null })
+        .update({ project_id: null } as any)
         .eq('project_id', deleteId);
         
       if (chatUpdateError) throw chatUpdateError;
