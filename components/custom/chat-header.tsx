@@ -56,8 +56,32 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
   
-  // Get current project ID for the chat
+  // First get the current user ID
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          console.error('Error fetching user:', error);
+          return;
+        }
+        
+        console.log('User fetched:', user.id);
+        setUserId(user.id);
+      } catch (error) {
+        console.error('Error in fetchUser:', error);
+      }
+    };
+    
+    fetchUser();
+  }, []);
+  
+  // Then get the current project ID for the chat
   useEffect(() => {
     if (!chatId) return;
     
@@ -86,38 +110,42 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     fetchChatProject();
   }, [chatId]);
   
-  // Load projects directly from supabase when needed - EXACTLY like sidebar-history.tsx
+  // Function to load projects - with robust error handling and logging
   const loadProjects = async () => {
-    if (projects.length > 0) return; // Only load once
-
+    if (!userId) {
+      console.error('No userId available for loading projects');
+      return;
+    }
+    
+    // Skip if we already have projects or have attempted to fetch
+    if (fetchAttempted && projects.length > 0) return;
+    
     setIsLoadingProjects(true);
+    setFetchAttempted(true);
+    
     try {
       const supabase = createClient();
       
-      // Get current user first
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Loading projects for user:', userId);
       
-      if (userError || !user) {
-        console.error('Error getting user:', userError);
+      // Get all projects first
+      const { data: allProjects, error: allError } = await supabase
+        .from('projects')
+        .select('*');
+        
+      if (allError) {
+        console.error('Error loading all projects:', allError);
         return;
       }
       
-      console.log('Loading projects for user:', user.id);
+      console.log('All projects (before filtering):', allProjects);
       
-      // Now get projects using the user ID - exactly like sidebar-history.tsx
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        console.error('Error loading projects:', error);
-        throw error;
-      }
+      // Filter client-side as a fallback approach
+      const userProjects = allProjects?.filter(p => p.user_id === userId) || [];
       
-      console.log('Loaded projects:', data);
-      setProjects(data || []);
+      console.log('User projects after filtering:', userProjects);
+      
+      setProjects(userProjects);
     } catch (error) {
       console.error('Error in loadProjects:', error);
       toast.error('Failed to load projects');
@@ -126,7 +154,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     }
   };
 
-  // Function to handle moving chat to a project - EXACTLY like sidebar-history.tsx
+  // Function to handle moving chat to a project
   const handleMoveToProject = async (projectId: string | null) => {
     if (!chatId) return;
     
@@ -177,104 +205,104 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         </BetterTooltip>
       )}
 
-      {/* Chat options dropdown - using EXACT approach from sidebar-history.tsx */}
-      {chatId && (
-        <BetterTooltip content="Chat Options">
-          <DropdownMenu 
-            modal={true}
-            open={isDropdownOpen}
-            onOpenChange={(open) => {
-              setIsDropdownOpen(open);
-              if (!open) {
-                setShowProjectSelector(false);
-              }
-            }}
-          >
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="order-3 md:order-2 md:px-2 px-2 md:h-fit"
+      {/* Chat options dropdown */}
+      <BetterTooltip content="Chat Options">
+        <DropdownMenu 
+          open={isDropdownOpen}
+          onOpenChange={(open) => {
+            setIsDropdownOpen(open);
+            if (open && chatId && userId) {
+              // Load projects when the dropdown is opened
+              loadProjects();
+            } else if (!open) {
+              // Only reset project selector when dropdown is closed
+              setShowProjectSelector(false);
+            }
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="order-3 md:order-2 md:px-2 px-2 md:h-fit"
+            >
+              <MoreHorizontalIcon />
+              <span className="md:sr-only">Options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {!showProjectSelector ? (
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault(); // Prevent dropdown from closing
+                  console.log('Move to project clicked');
+                  setShowProjectSelector(true);
+                }}
               >
-                <MoreHorizontalIcon />
-                <span className="md:sr-only">Options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {!showProjectSelector ? (
-                <DropdownMenuItem 
-                  className="cursor-pointer"
-                  onSelect={(e) => {
-                    e.preventDefault(); // Prevent dropdown from closing
-                    console.log('Move to project clicked');
-                    loadProjects();
-                    setShowProjectSelector(true);
-                  }}
-                >
-                  <FolderIcon className="size-4 mr-2" />
-                  <span>Move to project</span>
-                </DropdownMenuItem>
-              ) : (
-                <>
-                  <DropdownMenuLabel>Select a project</DropdownMenuLabel>
-                  {isLoadingProjects ? (
-                    <DropdownMenuItem disabled>
-                      <LoaderIcon className="size-4 animate-spin mr-2" />
-                      <span>Loading projects...</span>
-                    </DropdownMenuItem>
-                  ) : (
-                    <>
-                      <DropdownMenuItem 
-                        onSelect={(e) => {
-                          e.preventDefault(); // Prevent dropdown from closing
-                          handleMoveToProject(null);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <span>Remove from project</span>
-                        {currentProjectId === null && (
-                          <CheckIcon className="ml-auto size-4" />
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {projects.length === 0 ? (
-                        <DropdownMenuItem disabled>
-                          <span>No projects found</span>
-                        </DropdownMenuItem>
-                      ) : (
-                        projects.map((project) => (
-                          <DropdownMenuItem
-                            key={project.id}
-                            onSelect={(e) => {
-                              e.preventDefault(); // Prevent dropdown from closing
-                              handleMoveToProject(project.id);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <span>{project.name}</span>
-                            {currentProjectId === project.id && (
-                              <CheckIcon className="ml-auto size-4" />
-                            )}
-                          </DropdownMenuItem>
-                        ))
+                <FolderIcon className="size-4 mr-2" />
+                <span>Move to project</span>
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <DropdownMenuLabel>Select a project</DropdownMenuLabel>
+                {isLoadingProjects ? (
+                  <DropdownMenuItem disabled>
+                    <LoaderIcon className="size-4 animate-spin mr-2" />
+                    <span>Loading projects...</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem 
+                      onSelect={(e) => {
+                        e.preventDefault(); // Prevent dropdown from closing
+                        handleMoveToProject(null);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <span>Remove from project</span>
+                      {currentProjectId === null && (
+                        <CheckIcon className="ml-auto size-4" />
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onSelect={(e) => {
-                          e.preventDefault(); // Prevent dropdown from closing
-                          setShowProjectSelector(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <span>Back</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {projects.length === 0 ? (
+                      <DropdownMenuItem disabled>
+                        <span>No projects found (UserId: {userId?.slice(0, 5)}...)</span>
                       </DropdownMenuItem>
-                    </>
-                  )}
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </BetterTooltip>
-      )}
+                    ) : (
+                      projects.map((project) => (
+                        <DropdownMenuItem
+                          key={project.id}
+                          onSelect={(e) => {
+                            e.preventDefault(); // Prevent dropdown from closing
+                            handleMoveToProject(project.id);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <span>{project.name}</span>
+                          {currentProjectId === project.id && (
+                            <CheckIcon className="ml-auto size-4" />
+                          )}
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onSelect={(e) => {
+                        e.preventDefault(); // Prevent dropdown from closing
+                        setShowProjectSelector(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <span>Back</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </BetterTooltip>
 
       <Button
         className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
