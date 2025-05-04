@@ -244,3 +244,33 @@ export function getMessageIdFromAnnotations(message: Message) {
 
   return annotation.messageIdFromServer;
 }
+
+// Format date for display in UI (adds relative time)
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  
+  // If it's less than 24 hours ago, show relative time
+  const now = new Date();
+  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+  
+  if (diffInHours < 24) {
+    // Less than a day ago
+    if (diffInHours < 1) {
+      const minutes = Math.floor(diffInHours * 60);
+      return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    } else {
+      const hours = Math.floor(diffInHours);
+      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    }
+  } else if (diffInHours < 48) {
+    // Yesterday
+    return 'yesterday';
+  } else {
+    // Format as date
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  }
+}
