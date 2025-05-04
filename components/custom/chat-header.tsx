@@ -2,24 +2,18 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { useWindowSize } from 'usehooks-ts';
 
-import { updateChatProjectId } from '@/app/(chat)/actions';
-import { CheckIcon, FolderIcon, LoaderIcon, MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
+import { MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
 import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { BetterTooltip } from '@/components/ui/tooltip';
-import { createClient } from '@/lib/supabase/client';
 
 import { useSidebar } from '../ui/sidebar';
 
@@ -29,66 +23,6 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const { width: windowWidth } = useWindowSize();
   const params = useParams();
   const chatId = params?.id as string | undefined;
-  
-  const [projects, setProjects] = useState<any[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  const [showProjectSelector, setShowProjectSelector] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  // Function to load projects
-  const loadProjects = async () => {
-    if (projects.length > 0) return; // Only load once
-
-    setIsLoadingProjects(true);
-    try {
-      const supabase = createClient();
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error('Not authenticated');
-      
-      // Get projects for the current user
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      toast.error('Failed to load projects');
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  };
-
-  // Function to handle moving chat to a project
-  const handleMoveToProject = async (projectId: string | null) => {
-    if (!chatId) return;
-    
-    try {
-      // Call the server action to update the chat's project
-      await updateChatProjectId(chatId, projectId);
-      
-      toast.success(
-        projectId 
-          ? 'Chat moved to project' 
-          : 'Chat removed from project'
-      );
-      
-      // Refresh the page to update the UI
-      router.refresh();
-    } catch (error) {
-      console.error('Error moving chat to project:', error);
-      toast.error('Failed to move chat');
-    } finally {
-      setShowProjectSelector(false);
-      setIsDropdownOpen(false);
-    }
-  };
 
   return (
     <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
@@ -110,19 +44,9 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         </BetterTooltip>
       )}
 
-      {/* Only show Options button if we're in a chat (chatId exists) */}
-      {chatId && (
-        <DropdownMenu 
-          open={isDropdownOpen}
-          onOpenChange={(open) => {
-            setIsDropdownOpen(open);
-            if (open) {
-              loadProjects();
-            } else {
-              setShowProjectSelector(false);
-            }
-          }}
-        >
+      {/* Chat options dropdown - for now, just the UI without functionality */}
+      <BetterTooltip content="Chat Options">
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -133,72 +57,18 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {!showProjectSelector ? (
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowProjectSelector(true);
-                }}
-              >
-                <FolderIcon className="size-4 mr-2" />
-                <span>Move to project</span>
-              </DropdownMenuItem>
-            ) : (
-              <>
-                <DropdownMenuLabel>Select a project</DropdownMenuLabel>
-                {isLoadingProjects ? (
-                  <DropdownMenuItem disabled>
-                    <LoaderIcon className="size-4 animate-spin mr-2" />
-                    <span>Loading projects...</span>
-                  </DropdownMenuItem>
-                ) : (
-                  <>
-                    <DropdownMenuItem 
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        handleMoveToProject(null);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <span>Remove from project</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {projects.length === 0 ? (
-                      <DropdownMenuItem disabled>
-                        <span>No projects found</span>
-                      </DropdownMenuItem>
-                    ) : (
-                      projects.map((project) => (
-                        <DropdownMenuItem
-                          key={project.id}
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            handleMoveToProject(project.id);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <span>{project.name}</span>
-                        </DropdownMenuItem>
-                      ))
-                    )}
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    setShowProjectSelector(false);
-                  }}
-                  className="cursor-pointer"
-                >
-                  <span>Cancel</span>
-                </DropdownMenuItem>
-              </>
-            )}
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => {
+                console.log('Move to project clicked');
+                // We'll implement this functionality in the next step
+              }}
+            >
+              Move to project
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )}
+      </BetterTooltip>
 
       <Button
         className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
