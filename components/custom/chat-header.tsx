@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useWindowSize } from 'usehooks-ts';
 
-import { MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
+import { FolderIcon, MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
 import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +24,9 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const { width: windowWidth } = useWindowSize();
   const params = useParams();
   const chatId = params?.id as string | undefined;
+  
+  // Step 1: Add state to track when to show project selector
+  const [showProjectSelector, setShowProjectSelector] = useState(false);
 
   return (
     <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
@@ -44,9 +48,9 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
         </BetterTooltip>
       )}
 
-      {/* Chat options dropdown - for now, just the UI without functionality */}
+      {/* Chat options dropdown - with basic project selector state */}
       <BetterTooltip content="Chat Options">
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={() => setShowProjectSelector(false)}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -57,15 +61,27 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem 
-              className="cursor-pointer"
-              onClick={() => {
-                console.log('Move to project clicked');
-                // We'll implement this functionality in the next step
-              }}
-            >
-              Move to project
-            </DropdownMenuItem>
+            {!showProjectSelector ? (
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => {
+                  console.log('Move to project clicked');
+                  setShowProjectSelector(true);
+                }}
+              >
+                <FolderIcon className="size-4 mr-2" />
+                <span>Move to project</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem 
+                className="cursor-pointer"
+                onClick={() => {
+                  setShowProjectSelector(false);
+                }}
+              >
+                <span>Back to options</span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </BetterTooltip>
