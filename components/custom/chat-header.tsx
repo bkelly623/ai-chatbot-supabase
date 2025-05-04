@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
-import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { MoreHorizontalIcon, PlusIcon, VercelIcon } from '@/components/custom/icons';
+import { SidebarToggle } from '@/components/custom/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
