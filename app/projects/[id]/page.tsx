@@ -6,11 +6,11 @@ import ProjectDetail from '@/components/custom/project-detail';
 import { getSession } from '@/db/cached-queries';
 import { createClient } from '@/lib/supabase/server';
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default async function ProjectPage({ params }: PageProps) {
+export default async function ProjectPage({
+  params
+}: {
+  params: { id: string }
+}) {
   const { id } = params;
   
   // Get the user session
