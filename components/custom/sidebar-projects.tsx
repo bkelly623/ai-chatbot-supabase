@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import CreateProjectModal from '@/components/custom/createprojectmodal';
-import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +24,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import CreateProjectModal from '@/components/custom/createprojectmodal';
 import { createClient } from '@/lib/supabase/client';
+
 import type { User } from '@supabase/supabase-js';
 
 // Define Chat interface to match the one in sidebar-history.tsx
@@ -204,7 +205,7 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
         {projects.map(project => (
           <div
             key={project.id}
-            className="flex items-center justify-between text-sm text-white pr-2 pl-2 py-1 rounded hover:bg-muted group"
+            className="flex items-center justify-between text-sm text-white px-2 py-1 rounded hover:bg-muted group"
           >
             <div 
               onClick={() => handleSelectProject(project.id)}
@@ -218,10 +219,10 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  className="size-6 opacity-0 group-hover:opacity-100 focus:opacity-100"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <MoreHorizontalIcon className="h-4 w-4" />
+                  <MoreHorizontalIcon className="size-4" />
                   <span className="sr-only">Project options</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -235,7 +236,7 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
                     setShowRenameModal(true);
                   }}
                 >
-                  <PencilIcon className="h-4 w-4 mr-2" />
+                  <PencilIcon className="size-4 mr-2" />
                   <span>Rename</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -247,7 +248,7 @@ export default function SidebarProjects(props: SidebarProjectsProps) {
                     setShowDeleteDialog(true);
                   }}
                 >
-                  <TrashIcon className="h-4 w-4 mr-2" />
+                  <TrashIcon className="size-4 mr-2" />
                   <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
