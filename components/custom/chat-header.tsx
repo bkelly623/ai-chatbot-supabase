@@ -56,6 +56,24 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Get user ID first, just like in sidebar
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) throw error;
+        setUserId(user.id);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    
+    fetchUser();
+  }, []);
   
   // Get current project ID for the chat
   useEffect(() => {
@@ -82,27 +100,20 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
     fetchChatProject();
   }, [chatId]);
   
-  // Function to load projects - improved version
+  // Function to load projects - exactly like the sidebar version
   const loadProjects = async () => {
-    // Always refresh projects when dropdown is opened
-    setIsLoadingProjects(true);
-    setProjects([]);
+    if (!userId) return;
+    if (projects.length > 0) return; // Only load once
     
+    setIsLoadingProjects(true);
     try {
       const supabase = createClient();
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Get projects for the current user
+      // Use userId directly like in the sidebar
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
         
       if (error) throw error;
@@ -172,7 +183,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
           open={isDropdownOpen}
           onOpenChange={(open) => {
             setIsDropdownOpen(open);
-            if (open && chatId) {
+            if (open && chatId && userId) {
               // Load projects when the dropdown is opened
               loadProjects();
             } else if (!open) {
