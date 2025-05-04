@@ -208,6 +208,7 @@ export function ChatHeader({ selectedModelId }: { selectedModelId: string }) {
       {/* Chat options dropdown */}
       <BetterTooltip content="Chat Options">
         <DropdownMenu 
+          modal={true}
           open={isDropdownOpen}
           onOpenChange={(open) => {
             setIsDropdownOpen(open);
