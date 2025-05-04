@@ -15,6 +15,7 @@ import {
   getUserByIdQuery,
   getChatWithMessagesQuery,
   getChatsByProjectIdQuery,
+  getProjectByIdQuery,
 } from '@/db/queries';
 
 const getSupabase = cache(() => createClient());
@@ -126,6 +127,20 @@ export const getChatsByProjectId = async (projectId: string) => {
     {
       tags: [`project_${projectId}_chats`],
       revalidate: 10, // Cache for 10 seconds
+    }
+  )();
+};
+
+export const getProjectById = async (id: string) => {
+  const supabase = await getSupabase();
+  return unstable_cache(
+    async () => {
+      return getProjectByIdQuery(supabase, { id });
+    },
+    ['project', id],
+    {
+      tags: ['project'],
+      revalidate: 5,
     }
   )();
 };
