@@ -20,7 +20,7 @@ interface Chat {
   user_id: string;
   created_at: string;
   updated_at: string;
-  project_id: string;
+  project_id?: string | null;  // Make project_id optional to match potential response
 }
 
 interface ProjectDetailProps {
@@ -57,7 +57,8 @@ export default function ProjectDetail({ id, name, user, selectedModelId }: Proje
         throw error;
       }
       
-      setChats(data || []);
+      // Explicitly cast the data to match our Chat interface
+      setChats(data as Chat[] || []);
     } catch (error) {
       console.error('Error fetching chats:', error);
       toast.error('Failed to load chats');
